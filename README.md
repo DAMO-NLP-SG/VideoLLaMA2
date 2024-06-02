@@ -69,8 +69,6 @@ pip install flash-attn --no-build-isolation
 
 ## 🗝️ Training & Evaluation
 
-> The data we used to train [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) is temporally unavailable due to some copyright issues.
-
 ### Quick Start
 
 To facilitate further development on top of our codebase, we provide a quick-start guide on how to train [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) using the [VideoLLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) dataset and evaluate the trained model on the mainstream video-llm benchmarks.
