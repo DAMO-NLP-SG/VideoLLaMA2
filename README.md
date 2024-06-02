@@ -1,7 +1,7 @@
 <p align="center">
     <img src="https://img2.imgtp.com/2024/05/30/AGziyfzl.png" width="150" style="margin-bottom: 0.2;"/>
 <p>
-<h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">Video-LLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
+<h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.  </h2>
 
 <details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
@@ -18,7 +18,7 @@
 </p></details>
 
 ## 📰 News
-* **[2024.06.02]**  Release training, evaluation, and serving codes of Video-LLaMA 2.
+* **[2024.06.03]**  Release training, evaluation, and serving codes of VideoLLaMA 2.
 
 
 <img src="assets/pipeline.png" width="800" />
@@ -30,7 +30,7 @@ Basic Dependencies:
 * CUDA Version >= 11.7
 * transformers >= 4.37.2
 
-**[Online Mode]** Install required packages (more flexible for development):
+**[Online Mode]** Install required packages (better for development):
 ```bash
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 pip install flash-attn --no-build-isolation
 ```
 
-**[Offline Mode]** Install required packages (more flexible for using):
+**[Offline Mode]** Install VideoLLaMA2 as a Python package (better for direct use):
 ```bash
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
