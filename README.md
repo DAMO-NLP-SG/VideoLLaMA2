@@ -1,2 +1,299 @@
-# Video-LLaMA-2
-Video-LLaMA 2: Improving Video-LLMs with Convolutional Spatial-Temporal Aggregation and Stronger Audio Capability
+<p align="center">
+    <img src="https://img2.imgtp.com/2024/05/30/AGziyfzl.png" width="150" style="margin-bottom: 0.2;"/>
+<p>
+<h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">Video-LLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
+<h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.  </h2>
+
+<details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
+<!--  may -->
+
+> [**Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding**](https://github.com/DAMO-NLP-SG/Video-LLaMA) <br>
+> Hang Zhang, Xin Li, Lidong Bing <br>
+[![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/Video-LLaMA)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/Video-LLaMA.svg?style=social)](https://github.com/DAMO-NLP-SG/Video-LLaMA) [![arXiv](https://img.shields.io/badge/Arxiv-2306.02858-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2306.02858) <br>
+    
+> [**VCD: Mitigating Object Hallucinations in Large Vision-Language Models through Visual Contrastive Decoding**](https://arxiv.org/abs/2311.16922) <br>
+> Sicong Leng, Hang Zhang, Guanzheng Chen, Xin Li, Shijian Lu, Chunyan Miao, Lidong Bing <br>
+[![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/VCD)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/VCD.svg?style=social)](https://github.com/DAMO-NLP-SG/VCD)  [![arXiv](https://img.shields.io/badge/Arxiv-2311.16922-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2311.16922) <br>
+
+</p></details>
+
+## 📰 News
+* **[2024.06.02]**  Release training, evaluation, and serving codes of Video-LLaMA 2.
+
+
+<img src="assets/pipeline.png" width="800" />
+
+## 🛠️ Requirements and Installation
+Basic Dependencies:
+* Python >= 3.8
+* Pytorch >= 2.0.1
+* CUDA Version >= 11.7
+* transformers >= 4.37.2
+
+**[Online Mode]** Install required packages (more flexible for development):
+```bash
+git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
+cd VideoLLaMA2
+pip install -r requirements.txt
+pip install flash-attn --no-build-isolation
+```
+
+**[Offline Mode]** Install required packages (more flexible for using):
+```bash
+git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
+cd VideoLLaMA2
+pip install --upgrade pip  # enable PEP 660 support
+pip install -e .
+pip install flash-attn --no-build-isolation
+```
+
+## 🚀 Main Results
+
+### Multi-Choice Video QA & Open-Ended Video QA
+<p><img src="https://github.com/sennnnn/VideoLLaMA/assets/18526640/794de40e-ab30-4a5b-8384-589e1be46ab2" width="800" "/></p>
+
+
+### Video Captioning
+<p><img src="https://github.com/sennnnn/VideoLLaMA/assets/18526640/c8e7b9cf-0d32-43fe-b20a-c89d2c27fc79" width="800" "/></p>
+
+
+
+
+## :earth_americas: Model Zoo
+| Model Name     | Model Type | Visual Encoder | Language Decoder | # Training Frames |
+|:----------------|:------------:|:----------------|:------------------|:----------------:|
+| [VideoLLaMA2-7B-8F]()  | Base  | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 8 |
+| [VideoLLaMA2-7B-Instruct-8F]()  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 8 |
+| [VideoLLaMA2-7B-16F]()  | Base  | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 16 |
+| [VideoLLaMA2-7B-Instruct-16F]()  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 16 |
+
+## 🗝️ Training & Evaluation
+
+> The data we used to train [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) is temporally unavailable due to some copyright issues.
+
+### Quick Start
+
+To facilitate further development on top of our codebase, we provide a quick-start guide on how to train [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) using the [VideoLLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) dataset and evaluate the trained model on the mainstream video-llm benchmarks.
+
+1. Training Data Structure:
+```bash
+VideoLLaMA2
+├── datasets
+│   ├── videollava_pt
+|   |   ├── llava_image/ # Available at: https://pan.baidu.com/s/17GYcE69FcJjjUM0e4Gad2w?pwd=9ga3
+|   |   ├── valley/      # Available at: https://pan.baidu.com/s/1jluOimE7mmihEBfnpwwCew?pwd=jyjz
+|   |   └── valley_llavaimage.json # Available at: https://drive.google.com/file/d/1zGRyVSUMoczGq6cjQFmT0prH67bu2wXD/view, including 703K video-text and 558K image-text pairs
+│   ├── videollava_sft
+|   |   ├── llava_image_tune/  # Available at: https://pan.baidu.com/s/1l-jT6t_DlN5DTklwArsqGw?pwd=o6ko
+|   |   ├── videochatgpt_tune/ # Available at: https://pan.baidu.com/s/10hJ_U7wVmYTUo75YHc_n8g?pwd=g1hf
+|   |   └── videochatgpt_llavaimage_tune.json # Available at: https://drive.google.com/file/d/1zGRyVSUMoczGq6cjQFmT0prH67bu2wXD/view, including 100K video-centric, 625K image-centric and 40K text-only conversations
+```
+2. Command:
+```bash
+# VideoLLaMA2-vllava pretraining
+bash scripts/vllava/stc/pretrain.sh
+# VideoLLaMA2-vllava finetuning
+bash scripts/vllava/stc/finetune.sh
+```
+3. Evaluation Data Structure:
+```bash
+VideoLLaMA2
+├── eval
+│   ├── egoschema # Official website: https://github.com/egoschema/EgoSchema
+|   |   ├── good_clips_git/ # Available at: https://drive.google.com/drive/folders/1SS0VVz8rML1e5gWq7D7VtP1oxE2UtmhQ
+|   |   └── questions.json  # Available at: https://github.com/egoschema/EgoSchema/blob/main/questions.json
+│   ├── mvbench # Official website: https://huggingface.co/datasets/OpenGVLab/MVBench
+|   |   ├── video/
+|   |   |   ├── clever/
+|   |   |   └── ...
+|   |   └── json/
+|   |   |   ├── action_antonym.json
+|   |   |   └── ...
+│   ├── perception_test_mcqa # Official website: https://huggingface.co/datasets/OpenGVLab/MVBench
+|   |   ├── videos/ # Available at: https://storage.googleapis.com/dm-perception-test/zip_data/test_videos.zip
+|   |   └── mc_question_test.json # Download from https://storage.googleapis.com/dm-perception-test/zip_data/mc_question_test_annotations.zip
+│   ├── Activitynet_Zero_Shot_QA # Official website: https://github.com/MILVLG/activitynet-qa
+|   |   ├── all_test/   # Available at: https://mbzuaiac-my.sharepoint.com/:u:/g/personal/hanoona_bangalath_mbzuai_ac_ae/EatOpE7j68tLm2XAd0u6b8ABGGdVAwLMN6rqlDGM_DwhVA?e=90WIuW
+|   |   ├── test_q.json # Available at: https://github.com/MILVLG/activitynet-qa/tree/master/dataset
+|   |   └── test_a.json # Available at: https://github.com/MILVLG/activitynet-qa/tree/master/dataset
+│   ├── MSVD_Zero_Shot_QA # Official website: https://github.com/xudejing/video-question-answering
+|   |   ├── videos/     
+|   |   ├── test_q.json 
+|   |   └── test_a.json
+│   ├── videochatgpt_gen # Official website: https://github.com/mbzuai-oryx/Video-ChatGPT/tree/main/quantitative_evaluation
+|   |   ├── Test_Videos/ # Available at: https://mbzuaiac-my.sharepoint.com/:u:/g/personal/hanoona_bangalath_mbzuai_ac_ae/EatOpE7j68tLm2XAd0u6b8ABGGdVAwLMN6rqlDGM_DwhVA?e=90WIuW
+|   |   ├── Test_Human_Annotated_Captions/ # Available at: https://mbzuaiac-my.sharepoint.com/personal/hanoona_bangalath_mbzuai_ac_ae/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking%2FTest%5FHuman%5FAnnotated%5FCaptions%2Ezip&parent=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking&ga=1
+|   |   ├── generic_qa.json     # These three json files available at: https://mbzuaiac-my.sharepoint.com/personal/hanoona_bangalath_mbzuai_ac_ae/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking%2FBenchmarking%5FQA&ga=1
+|   |   ├── temporal_qa.json
+|   |   └── consistency_qa.json
+```
+4. Command:
+```bash
+# mvbench evaluation
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_video_qa_mvbench.sh
+# activitynet-qa evaluation (need to set azure openai key/endpoint/deployname)
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_video_qa_mvbench.sh
+```
+
+### Data Format
+
+If you want to train a video-llm on your data, you need to follow the procedures below to prepare the video/image sft data:
+
+1. Suppose your data structure is like:
+```bash
+VideoLLaMA2
+├── datasets
+│   ├── custom_sft
+│   |   ├── images
+│   |   ├── videos
+|   |   └── custom.json
+```
+2. Then you should re-organize the annotated video/image sft data according to the following format:
+```json
+[
+    {
+        "id": 0,
+        "video": "images/xxx.jpg",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "<image>\nWhat are the colors of the bus in the image?"
+            },
+            {
+                "from": "gpt",
+                "value": "The bus in the image is white and red."
+            },
+            ...
+        ],
+    }
+    {
+        "id": 1,
+        "video": "videos/xxx.mp4",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "<video>\nWhat are the main activities that take place in the video?"
+            },
+            {
+                "from": "gpt",
+                "value": "The main activities that take place in the video are the preparation of camera equipment by a man, a group of men riding a helicopter, and a man sailing a boat through the water."
+            },
+            ...
+        ],
+    },
+    ...
+]
+```
+3. Modify the `scripts/vllava/stc/finetune.sh`:
+```bash
+...
+--data_path datasets/custom_sft/custom.json
+--data_folder datasets/custom_sft/
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH
+...
+```
+
+## 🤖 Inference
+
+Video/Image Inference:
+```python
+import torch
+import transformers
+
+import sys
+sys.path.append('./')
+from videollama2.conversation import conv_templates, SeparatorStyle
+from videollama2.constants import DEFAULT_MMODAL_TOKEN, MMODAL_TOKEN_INDEX
+from videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, KeywordsStoppingCriteria, process_video, process_image
+from videollama2.model.builder import load_pretrained_model
+
+
+def inference():
+    # Video Inference
+    paths = ['assets/cat_and_chicken.mp4']
+    questions = ['What animals are in the video, what are they doing, and how does the video feel?']
+    # Reply:
+    # The video features a kitten and a baby chick playing together. The kitten is seen laying on the floor while the baby chick hops around. The two animals interact playfully with each other, and the video has a cute and heartwarming feel to it.
+    modal_list = ['video']
+
+    # Video Inference
+    paths = ['assets/sora.mp4']
+    questions = ['Please describe this video.']
+    # Reply:
+    # The video features a series of colorful kites flying in the sky. The kites are first seen flying over trees, and then they are shown flying in the sky. The kites come in various shapes and colors, including red, green, blue, and yellow. The video captures the kites soaring gracefully through the air, with some kites flying higher than others. The sky is clear and blue, and the trees below are lush and green. The kites are the main focus of the video, and their vibrant colors and intricate designs are highlighted against the backdrop of the sky and trees. Overall, the video showcases the beauty and artistry of kite-flying, and it is a delight to watch the kites dance and glide through the air.
+    modal_list = ['video']
+
+    # Image Inference
+    paths = ['assets/sora.png']
+    questions = ['What is the woman wearing, what is she doing, and how does the image feel?']
+    # Reply:
+    # The woman in the image is wearing a black coat and sunglasses, and she is walking down a rain-soaked city street. The image feels vibrant and lively, with the bright city lights reflecting off the wet pavement, creating a visually appealing atmosphere. The woman's presence adds a sense of style and confidence to the scene, as she navigates the bustling urban environment.
+    modal_list = ['image']
+
+    # 1. Initialize the model.
+    model_path = 'publish_models/videollama2'
+    model_name = get_model_name_from_path(model_path)
+    tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
+    model = model.to('cuda:0')
+    conv_mode = 'llama_2'
+
+    # 2. Visual preprocess (load & transform image or video).
+    if modal_list[0] == 'video':
+        tensor = process_video(paths[0], processor, model.config.image_aspect_ratio).to(dtype=torch.float16, device='cuda', non_blocking=True)
+        default_mm_token = DEFAULT_MMODAL_TOKEN["VIDEO"]
+        modal_token_index = MMODAL_TOKEN_INDEX["VIDEO"]
+    else:
+        tensor = process_image(paths[0], processor, model.config.image_aspect_ratio)[0].to(dtype=torch.float16, device='cuda', non_blocking=True)
+        default_mm_token = DEFAULT_MMODAL_TOKEN["IMAGE"]
+        modal_token_index = MMODAL_TOKEN_INDEX["IMAGE"]
+    tensor = [tensor]
+
+    # 3. text preprocess (tag process & generate prompt).
+    question = default_mm_token + "\n" + questions[0]
+    conv = conv_templates[conv_mode].copy()
+    conv.append_message(conv.roles[0], question)
+    conv.append_message(conv.roles[1], None)
+    prompt = conv.get_prompt()
+    input_ids = tokenizer_MMODAL_token(prompt, tokenizer, modal_token_index, return_tensors='pt').unsqueeze(0).to('cuda:0')
+
+    # 4. generate response according to visual signals and prompts. 
+    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE] else conv.sep2
+    # keywords = ["<s>", "</s>"]
+    keywords = [stop_str]
+    stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+
+    with torch.inference_mode():
+        output_ids = model.generate(
+            input_ids,
+            images_or_videos=tensor,
+            modal_list=modal_list,
+            do_sample=True,
+            temperature=0.2,
+            max_new_tokens=1024,
+            use_cache=True,
+            stopping_criteria=[stopping_criteria],
+        )
+
+    outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+    print(outputs[0])
+
+
+if __name__ == "__main__":
+    inference()
+```
+
+## 🤗 Demo
+
+comming soon
+
+## 👍 Acknowledgement
+* [**LLaVA**](github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
+* [**Video-ChatGPT**](https://github.com/mbzuai-oryx/Video-ChatGPT), [**Video-LLaVA**](github.com/PKU-YuanGroup/Video-LLaVA). 
+* [**WebVid**](https://github.com/m-bain/webvid), [**Panda-70M**](https://github.com/snap-research/Panda-70M), [**LanguageBind**](https://github.com/PKU-YuanGroup/LanguageBind), [**InternVid**](https://github.com/OpenGVLab/InternVideo/tree/main/Data/InternVid).
+* [**VideoChat2**](https://github.com/OpenGVLab/Ask-Anything/tree/main/video_chat2), [**Valley**](https://github.com/RupertLuo/Valley), [**VTimeLLM**](https://github.com/huangb23/VTimeLLM), [**ShareGPT4V**](https://sharegpt4v.github.io/)
+
+
+## 🔒 License
+
+This project is released under the Apache 2.0 license as found in the LICENSE file.
+The service is a research preview intended for **non-commercial use ONLY**, subject to the model License of LLaMA, Terms of Use of the data generated by OpenAI, and Privacy Practices of ShareGPT. Please get in touch with us if you find any potential violations.

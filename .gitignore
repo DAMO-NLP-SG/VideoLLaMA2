@@ -1,0 +1,53 @@
+# Python
+__pycache__
+*.pyc
+*.egg-info
+dist
+
+# Log
+*.log
+*.log.*
+*.json
+*.jsonl
+log_dir*/
+
+# Data
+!**/alpaca-data-conversation.json
+
+# Editor
+.idea
+*.swp
+
+# Other
+.DS_Store
+
+# jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# DevContainer
+!.devcontainer/*
+
+# Demo
+serve_images/
+
+# data folder
+data/
+dataset/
+datasets/
+
+# training folder
+wandb
+ckpts*
+output
+output/
+checkpoints
+checkpoints/
+work_dirs*/
+
+# evaluation folder
+eval/
+
+# pretrained weights
+pretrained/
+publish_models/

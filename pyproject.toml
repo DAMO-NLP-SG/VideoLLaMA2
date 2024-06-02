@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "videollama2"
+version = "1.0"
+description = "Release of VideoLLaMA2"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "torch>=2.0.1", "torchvision>=0.15.2", 
+    "tokenizers==0.15.1", "sentencepiece==0.1.99",
+    "transformers==4.37.2", "accelerate==0.21.0",
+    "deepspeed==0.13.1", "peft==0.4.0", "shortuuid",
+    "decord==0.6.0", "pytorchvideo==0.1.5", "imageio==2.34.0", "imageio-ffmpeg==0.4.9", 
+    "moviepy==1.0.3", "scenedetect==0.6.3", "numpy", "scikit-learn==1.2.2",
+    "einops==0.6.1", "einops-exts==0.0.4", "timm==0.6.13",
+    "bitsandbytes==0.41.0", "pydantic<2,>=1", "markdown2[all]", 
+    "gradio==3.35.2", "gradio_client==0.2.9",
+    "requests", "httpx==0.24.0", "openai", "uvicorn", "fastapi", "wandb"
+]
+
+[project.optional-dependencies]
+train = ["ninja"]
+
+[project.urls]
+"Homepage" = "https://github.com/DAMO-NLP-SG/VideoLLaMA2"
+"Bug Tracker" = "https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues"
+
+[tool.setuptools.packages.find]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*", "scripts*", "tests*"]
+
+[tool.wheel]
+exclude = ["assets*", "benchmark*", "docs", "dist*", "playground*", "scripts*", "tests*"]
