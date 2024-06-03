@@ -30,6 +30,7 @@ log_dir*/
 
 # Demo
 serve_images/
+temp/
 
 # data folder
 data/
