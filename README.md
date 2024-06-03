@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/38bf61d7-ee34-4504-b0f7-a97836b4a6b7" width="150" style="margin-bottom: 0.2;"/>
+    <img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/blob/e7bc34e0e9a96d77947a75b54399d9f96ccf209d/assets/logo.png" width="150" style="margin-bottom: 0.2;"/>
 <p>
 
 <h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
