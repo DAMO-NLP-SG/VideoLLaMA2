@@ -1,6 +1,7 @@
 <p align="center">
-    <img src="https://img2.imgtp.com/2024/05/30/AGziyfzl.png" width="150" style="margin-bottom: 0.2;"/>
+    <img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/38bf61d7-ee34-4504-b0f7-a97836b4a6b7" width="150" style="margin-bottom: 0.2;"/>
 <p>
+
 <h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.  </h2>
 
@@ -50,11 +51,12 @@ pip install flash-attn --no-build-isolation
 ## 🚀 Main Results
 
 ### Multi-Choice Video QA & Open-Ended Video QA
-<p><img src="https://github.com/sennnnn/VideoLLaMA/assets/18526640/794de40e-ab30-4a5b-8384-589e1be46ab2" width="800" "/></p>
+<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/c8e541ce-7d61-416a-8a2c-687ea0fb0897" width="800" "/></p>
 
 
 ### Video Captioning
-<p><img src="https://github.com/sennnnn/VideoLLaMA/assets/18526640/c8e7b9cf-0d32-43fe-b20a-c89d2c27fc79" width="800" "/></p>
+<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/62c618c0-0183-4a8b-a04a-ab006b9b2e04" width="800" "/></p>
+
 
 
 
