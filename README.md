@@ -18,6 +18,9 @@
 
 </p></details>
 
+<div align="center"><video src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/e0e7951c-f392-42ed-afad-b2c7984d3e38" width="800"></div>
+
+
 ## 📰 News
 * **[2024.06.03]**  Release training, evaluation, and serving codes of VideoLLaMA 2.
 
@@ -73,7 +76,7 @@ pip install flash-attn --no-build-isolation
 
 ### Quick Start
 
-To facilitate further development on top of our codebase, we provide a quick-start guide on how to train [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) using the [VideoLLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) dataset and evaluate the trained model on the mainstream video-llm benchmarks.
+To facilitate further development on top of our codebase, we provide a quick-start guide on how to train a customized [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) with [VideoLLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) dataset and evaluate the trained model on the mainstream video-llm benchmarks.
 
 1. Training Data Structure:
 ```bash
@@ -287,7 +290,7 @@ if __name__ == "__main__":
 comming soon
 
 ## 👍 Acknowledgement
-* [**LLaVA**](github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
+* [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
 * [**Video-ChatGPT**](https://github.com/mbzuai-oryx/Video-ChatGPT), [**Video-LLaVA**](github.com/PKU-YuanGroup/Video-LLaVA). 
 * [**WebVid**](https://github.com/m-bain/webvid), [**Panda-70M**](https://github.com/snap-research/Panda-70M), [**LanguageBind**](https://github.com/PKU-YuanGroup/LanguageBind), [**InternVid**](https://github.com/OpenGVLab/InternVideo/tree/main/Data/InternVid).
 * [**VideoChat2**](https://github.com/OpenGVLab/Ask-Anything/tree/main/video_chat2), [**Valley**](https://github.com/RupertLuo/Valley), [**VTimeLLM**](https://github.com/huangb23/VTimeLLM), [**ShareGPT4V**](https://sharegpt4v.github.io/)
