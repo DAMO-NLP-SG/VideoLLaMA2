@@ -85,16 +85,11 @@ def get_model_output(model, tokenizer, video_tensor, questions, conv_mode="v1", 
 
 
 def run_inference(args):
-    """
-    Run inference on ActivityNet QA DataSet using the Video-ChatGPT model.
-
-    Args:
-        args: Command-line arguments.
-    """
     # Initialize the model
     model_name = get_model_name_from_path(args.model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
-    model = model.to(args.device)
+
+    num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
 
     gt_questions = json.load(open(args.question_file, "r"))
     gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
@@ -111,13 +106,7 @@ def run_inference(args):
         question = sample['question']
         answer = sample['captions']
 
-        # # Load the video file
-        # for fmt in video_formats:  # Added this line
-        #     temp_path = os.path.join(args.video_folder, f"{video_name}{fmt}")
-        #     if os.path.exists(temp_path):
-        #         video_path = temp_path
-        #         break
-        video_path = video_name
+        video_path = os.path.join(args.video_folder, video_name)
 
         video_tensor = process_video(video_path, processor, aspect_ratio=None, sample_scheme='uniform')
         output = get_model_output(model, tokenizer, video_tensor[None], [question], args.conv_mode, args.device)[0]

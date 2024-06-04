@@ -24,7 +24,7 @@ if [ ! -f "$output_file" ]; then
         TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/run_inference_video_msvc.py \
           --model-path ${CKPT} \
           --video-folder ${EVAL_DATA_DIR}/MSVC \
-          --question-file ${EVAL_DATA_DIR}/MSVC/multi-source_video_caption.json \
+          --question-file ${EVAL_DATA_DIR}/MSVC/msvc.json \
           --output-file ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
           --num-chunks $CHUNKS \
           --chunk-idx $IDX \
