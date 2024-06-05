@@ -54,12 +54,11 @@ pip install flash-attn --no-build-isolation
 ## 🚀 Main Results
 
 ### Multi-Choice Video QA & Open-Ended Video QA
-<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/c8e541ce-7d61-416a-8a2c-687ea0fb0897" width="800" "/></p>
+<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/bf74e0c8-6b16-42d1-8a17-4bc9a636a895" width="800" "/></p>
 
 
 ### Video Captioning
-<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/62c618c0-0183-4a8b-a04a-ab006b9b2e04" width="800" "/></p>
-
+<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/2afc210a-345c-4041-adad-942534c897df" width="800" "/></p>
 
 
 
