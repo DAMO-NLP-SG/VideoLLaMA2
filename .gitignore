@@ -10,6 +10,7 @@ dist
 *.json
 *.jsonl
 log_dir*/
+temp*/
 
 # Data
 !**/alpaca-data-conversation.json
@@ -20,6 +21,7 @@ log_dir*/
 
 # Other
 .DS_Store
+3rd_parties
 
 # jupyter
 .ipynb_checkpoints

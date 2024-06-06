@@ -67,6 +67,7 @@ class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
         output_hidden_states: Optional[bool] = None,
         images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
+        **kwargs
     ) -> Union[Tuple, CausalLMOutputWithPast]:
 
         if inputs_embeds is None:
