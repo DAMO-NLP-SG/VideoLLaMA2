@@ -408,7 +408,8 @@ def process_video(video_path, processor, aspect_ratio='pad', num_frames=NUM_FRAM
                 frame_id_list = np.linspace(0, duration-1, MAX_FRAMES, dtype=int)
             video_data = video_frames[frame_id_list]
         else:
-            decord_vr = VideoReader(uri=video_path, ctx=cpu(0)) if "Valley/finetune/source_videos" not in video_path else VideoReader(uri=video_path, ctx=cpu(0), num_threads=1)  # add num_threads=1 for Valley videos
+            # NOTE: num_threads=1 is required to avoid deadlock in multiprocessing
+            decord_vr = VideoReader(uri=video_path, ctx=cpu(0), num_threads=1) 
             duration, local_fps = len(decord_vr), float(decord_vr.get_avg_fps())
         
             frame_id_list = frame_sample(duration, mode=sample_scheme, local_fps=local_fps)
@@ -426,10 +427,12 @@ def process_video(video_path, processor, aspect_ratio='pad', num_frames=NUM_FRAM
             #     video_frames = [Image.fromarray(f) for f in video_data.numpy()]
             #     chunked_video_frames = chunk_list(video_frames, 2*2)
             #     video_data = [frame_expansion(frame_list, 2) for frame_list in chunked_video_frames]
-    else:
-        video = video_path
-        frame_id_list = frame_sample(duration, mode='uniform')
-        video_data = [video.get_data(frame_id) for frame_id in frame_id_list]
+    elif isinstance(video_path, np.ndarray):
+        assert len(video_path) == num_frames
+        video_data = video_path
+    elif isinstance(video_path, list):
+        assert len(video_path) == num_frames
+        video_data = np.stack([np.array(x) for x in video_path])
 
     if image_grid:
         grid_h = grid_w = math.ceil(math.sqrt(num_frames))
