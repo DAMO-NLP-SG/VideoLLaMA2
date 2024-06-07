@@ -286,7 +286,28 @@ if __name__ == "__main__":
 
 ## 🤗 Demo
 
-coming soon
+To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
+
+### 1. Launch a global controller
+```bash
+cd /path/to/VideoLLaMA2
+python -m videollama2.serve.controller --host 0.0.0.0 --port 10000
+```
+
+### 2. Launch a gradio webserver
+```bash
+python -m videollama2.serve.gradio_web_server --controller http://localhost:10000 --model-list-mode reload
+```
+
+### 3. Launch one or multiple model workers
+```bash
+#  export HF_ENDPOINT=https://hf-mirror.com  # If you are unable to access Hugging Face, try to uncomment this line.
+python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40000 --worker http://localhost:40000 --model-path /PATH/TO/MODEL1
+python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40001 --worker http://localhost:40001 --model-path /PATH/TO/MODEL2
+python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40002 --worker http://localhost:40002 --model-path /PATH/TO/MODEL3
+...
+```
+
 
 ## 👍 Acknowledgement
 * [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
