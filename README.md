@@ -284,6 +284,7 @@ if __name__ == "__main__":
     inference()
 ```
 
+
 ## 🤗 Demo
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
