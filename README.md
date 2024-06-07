@@ -288,18 +288,18 @@ if __name__ == "__main__":
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
 
-### 1. Launch a global controller
+1. Launch a global controller
 ```bash
 cd /path/to/VideoLLaMA2
 python -m videollama2.serve.controller --host 0.0.0.0 --port 10000
 ```
 
-### 2. Launch a gradio webserver
+2. Launch a gradio webserver
 ```bash
 python -m videollama2.serve.gradio_web_server --controller http://localhost:10000 --model-list-mode reload
 ```
 
-### 3. Launch one or multiple model workers
+3. Launch one or multiple model workers
 ```bash
 #  export HF_ENDPOINT=https://hf-mirror.com  # If you are unable to access Hugging Face, try to uncomment this line.
 python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40000 --worker http://localhost:40000 --model-path /PATH/TO/MODEL1
