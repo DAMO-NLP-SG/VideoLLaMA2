@@ -284,6 +284,7 @@ if __name__ == "__main__":
     inference()
 ```
 
+
 ## 🤗 Demo
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
@@ -307,7 +308,6 @@ python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://loca
 python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40002 --worker http://localhost:40002 --model-path /PATH/TO/MODEL3
 ...
 ```
-
 
 ## 👍 Acknowledgement
 * [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
