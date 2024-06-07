@@ -308,7 +308,6 @@ python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://loca
 ...
 ```
 
-
 ## 👍 Acknowledgement
 * [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
 * [**Video-ChatGPT**](https://github.com/mbzuai-oryx/Video-ChatGPT), [**Video-LLaVA**](github.com/PKU-YuanGroup/Video-LLaVA). 
