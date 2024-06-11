@@ -46,7 +46,7 @@ checkpoints/
 work_dirs*/
 
 # evaluation folder
-eval/
+/eval/
 
 # pretrained weights
 pretrained/
