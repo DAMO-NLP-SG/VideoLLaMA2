@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import os
 import re
 
 import einops
@@ -20,6 +21,46 @@ import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.regnet import RegStage
 from timm.models.layers import LayerNorm, LayerNorm2d
+from transformers import TRANSFORMERS_CACHE
+
+
+def parse_snapshot_folder(repo_id, cache_dir=None, repo_type="model"):
+    revision = "main"
+    # 1. parse the downloaded cache folder
+    if cache_dir is None:
+        cache_dir = TRANSFORMERS_CACHE
+    else:
+        cache_dir = cache_dir
+    object_id = repo_id.replace("/", "--")
+    repo_cache = os.path.join(cache_dir, f"{repo_type}s--{object_id}")
+    # 2. resolve refs (for instance to convert main to the associated commit sha)
+    refs_dir = os.path.join(repo_cache, "refs")
+    if os.path.isdir(refs_dir):
+        revision_file = os.path.join(refs_dir, revision)
+        if os.path.isfile(revision_file):
+            with open(revision_file) as f:
+                revision = f.read()
+    # 3. acquire the snapshot folder
+    folder = os.path.join(repo_cache, "snapshots", revision)
+
+    return folder
+
+
+def load_mm_projector(model_path, cache_dir=None, token=None):
+    if os.path.exists(os.path.join(model_path, 'mm_projector.bin')):
+        is_local = True
+        folder = model_path
+    else:
+        is_local = False
+        folder = parse_snapshot_folder(model_path, cache_dir=cache_dir, repo_type="model")
+        if not os.path.exists(os.path.join(folder, 'mm_projector.bin')):
+            # downloading from remote repo
+            from huggingface_hub import snapshot_download
+            snapshot_download(repo_id=model_path, cache_dir=cache_dir, token=token)
+
+    mm_projector_weights = torch.load(os.path.join(folder, 'mm_projector.bin'), map_location='cpu')
+    mm_projector_weights = {k: v.to(torch.float16) for k, v in mm_projector_weights.items()}
+    return mm_projector_weights
 
 
 class IdentityMap(nn.Module):
