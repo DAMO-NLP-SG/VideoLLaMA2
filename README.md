@@ -185,12 +185,12 @@ VideoLLaMA2
     ...
 ]
 ```
-3. Modify the `scripts/vllava/stc/finetune.sh`:
+3. Modify the `scripts/custom/finetune.sh`:
 ```bash
 ...
 --data_path datasets/custom_sft/custom.json
 --data_folder datasets/custom_sft/
---pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2-7B-Base)
 ...
 ```
 
@@ -203,9 +203,9 @@ import transformers
 
 import sys
 sys.path.append('./')
-from videollama2.conversation import conv_templates, SeparatorStyle
+from videollama2.conversation import conv_templates
 from videollama2.constants import DEFAULT_MMODAL_TOKEN, MMODAL_TOKEN_INDEX
-from videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, KeywordsStoppingCriteria, process_video, process_image
+from videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, process_video, process_image
 from videollama2.model.builder import load_pretrained_model
 
 
@@ -233,6 +233,8 @@ def inference():
 
     # 1. Initialize the model.
     model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
+    # Base model inference (only need to replace model_path)
+    # model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-Base'
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
     model = model.to('cuda:0')
@@ -257,12 +259,6 @@ def inference():
     prompt = conv.get_prompt()
     input_ids = tokenizer_MMODAL_token(prompt, tokenizer, modal_token_index, return_tensors='pt').unsqueeze(0).to('cuda:0')
 
-    # 4. generate response according to visual signals and prompts. 
-    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE] else conv.sep2
-    # keywords = ["<s>", "</s>"]
-    keywords = [stop_str]
-    stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
-
     with torch.inference_mode():
         output_ids = model.generate(
             input_ids,
@@ -272,7 +268,6 @@ def inference():
             temperature=0.2,
             max_new_tokens=1024,
             use_cache=True,
-            stopping_criteria=[stopping_criteria],
         )
 
     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)

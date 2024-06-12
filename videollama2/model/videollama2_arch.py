@@ -13,6 +13,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import os
 from abc import ABC, abstractmethod
 
 import einops
@@ -76,11 +77,20 @@ class Videollama2MetaModel:
                 p.requires_grad = True
 
         if pretrain_mm_mlp_adapter is not None:
-            mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
+            if os.path.exists(pretrain_mm_mlp_adapter):
+                is_local = True
+                mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
+            else:
+                # Support loading projector weights from remote HuggingFace model hub
+                is_local = False
+                pretrain_mm_mlp_adapter = pretrain_mm_mlp_adapter.replace('mm_projector.bin', '')
+                pretrain_mm_mlp_adapter = pretrain_mm_mlp_adapter.strip('/').strip('\\').strip()
+                mm_projector_weights = load_mm_projector(pretrain_mm_mlp_adapter)
+
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
 
-            #self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
+            # self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
             # set strict=False to avoid missing key error regarding bert.embeddings.position_ids
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'), strict=False)
 
