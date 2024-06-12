@@ -2,7 +2,7 @@
     <img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/blob/e7bc34e0e9a96d77947a75b54399d9f96ccf209d/assets/logo.png" width="150" style="margin-bottom: 0.2;"/>
 <p>
 
-<h3 align="center"><a href="https://arxiv.org/pdf/2306.02858">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
+<h3 align="center"><a href="https://arxiv.org/abs/2406.07476">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.  </h2>
 
 <details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
@@ -11,7 +11,7 @@
 > [**Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding**](https://github.com/DAMO-NLP-SG/Video-LLaMA) <br>
 > Hang Zhang, Xin Li, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/Video-LLaMA)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/Video-LLaMA.svg?style=social)](https://github.com/DAMO-NLP-SG/Video-LLaMA) [![arXiv](https://img.shields.io/badge/Arxiv-2306.02858-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2306.02858) <br>
-    
+
 > [**VCD: Mitigating Object Hallucinations in Large Vision-Language Models through Visual Contrastive Decoding**](https://arxiv.org/abs/2311.16922) <br>
 > Sicong Leng, Hang Zhang, Guanzheng Chen, Xin Li, Shijian Lu, Chunyan Miao, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/VCD)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/VCD.svg?style=social)](https://github.com/DAMO-NLP-SG/VCD)  [![arXiv](https://img.shields.io/badge/Arxiv-2311.16922-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2311.16922) <br>
@@ -57,7 +57,7 @@ pip install flash-attn --no-build-isolation
 <p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/9cc4a5ae-d850-4eef-bd51-83688b94698e" width="800" "/></p>
 
 
-###  Open-Ended Video QA
+###  Video Captioning
 <p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/2ed7aa53-db56-4829-8375-85aefbc5120a" width="800" "/></p>
 
 
@@ -309,7 +309,7 @@ python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://loca
 ```
 
 ## 👍 Acknowledgement
-* [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/), [**Honeybee**](https://github.com/kakaobrain/honeybee).
+* [**LLaVA**](https:github.com/haotian-liu/LLaVA), [**FastChat**](https://github.com/lm-sys/FastChat), [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/).
 * [**Video-ChatGPT**](https://github.com/mbzuai-oryx/Video-ChatGPT), [**Video-LLaVA**](https://github.com/PKU-YuanGroup/Video-LLaVA). 
 * [**WebVid**](https://github.com/m-bain/webvid), [**Panda-70M**](https://github.com/snap-research/Panda-70M), [**LanguageBind**](https://github.com/PKU-YuanGroup/LanguageBind), [**InternVid**](https://github.com/OpenGVLab/InternVideo/tree/main/Data/InternVid).
 * [**VideoChat2**](https://github.com/OpenGVLab/Ask-Anything/tree/main/video_chat2), [**Valley**](https://github.com/RupertLuo/Valley), [**VTimeLLM**](https://github.com/huangb23/VTimeLLM), [**ShareGPT4V**](https://sharegpt4v.github.io/).
