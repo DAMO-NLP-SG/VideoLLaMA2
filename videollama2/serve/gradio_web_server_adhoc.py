@@ -5,7 +5,6 @@ import torch
 import tempfile
 import gradio as gr
 from PIL import Image
-from fastapi import FastAPI
 
 import sys
 sys.path.append('./')
@@ -63,14 +62,16 @@ class Chat:
     def __init__(self, model_path, conv_mode, model_base=None, load_8bit=False, load_4bit=False, device='cuda'):
         # disable_torch_init()
         model_name = get_model_name_from_path(model_path)
-        self.tokenizer, self.model, processor, context_len = load_pretrained_model(
-            model_path, model_base, model_name,
-            load_8bit, load_4bit,
-            device=device)
+        # self.tokenizer, self.model, processor, context_len = load_pretrained_model(
+        #     model_path, model_base, model_name,
+        #     load_8bit, load_4bit,
+        #     device=device)
+        self.tokenizer, self.model, processor, context_len = None, None, None, None
         self.processor = processor
         self.conv_mode = conv_mode
         self.conv = conv_templates[conv_mode].copy()
-        self.device = self.model.device
+        # self.device = self.model.device
+        self.device = 'cuda'
 
     def get_prompt(self, qs, state):
         state.append_message(state.roles[0], qs)
@@ -218,12 +219,10 @@ if __name__ == '__main__':
     model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
 
     handler = Chat(model_path, conv_mode=conv_mode, load_8bit=False, load_4bit=False, device='cuda')
-    handler.model.to(dtype=torch.float16)
+    # handler.model.to(dtype=torch.float16)
 
     if not os.path.exists("temp"):
         os.makedirs("temp")
-
-    app = FastAPI()
 
     textbox = gr.Textbox(
         show_label=False, placeholder="Enter text and press ENTER", container=False
@@ -242,49 +241,54 @@ if __name__ == '__main__':
                 video = gr.Video(label="Input Video")
 
                 cur_dir = os.path.dirname(os.path.abspath(__file__))
-                gr.Examples(
-                    examples=[
-                        [
-                            f"{cur_dir}/examples/extreme_ironing.jpg",
-                            "What is unusual about this image?",
-                        ],
-                        [
-                            f"{cur_dir}/examples/waterview.jpg",
-                            "What are the things I should be cautious about when I visit here?",
-                        ],
-                        [
-                            f"{cur_dir}/examples/desert.jpg",
-                            "If there are factual errors in the questions, point it out; if not, proceed answering the question. What’s happening in the desert?",
-                        ],
-                    ],
-                    inputs=[image, textbox],
-                )
+                # gr.Examples(
+                #     examples=[
+                #         [
+                #             f"{cur_dir}/examples/extreme_ironing.jpg",
+                #             "What is unusual about this image?",
+                #         ],
+                #         [
+                #             f"{cur_dir}/examples/waterview.jpg",
+                #             "What are the things I should be cautious about when I visit here?",
+                #         ],
+                #         [
+                #             f"{cur_dir}/examples/desert.jpg",
+                #             "If there are factual errors in the questions, point it out; if not, proceed answering the question. What’s happening in the desert?",
+                #         ],
+                #     ],
+                #     inputs=[image, textbox],
+                # )
 
             with gr.Column(scale=7):
-                chatbot = gr.Chatbot(label="VideoLLaMA2", bubble_full_width=True).style(height=750)
+                chatbot = gr.Chatbot(label="VideoLLaMA2", bubble_full_width=True, height=750)
                 with gr.Row():
                     with gr.Column(scale=8):
                         textbox.render()
                     with gr.Column(scale=1, min_width=50):
                         submit_btn = gr.Button(value="Send", variant="primary", interactive=True)
                 with gr.Row(elem_id="buttons") as button_row:
-                    upvote_btn = gr.Button(value="👍  Upvote", interactive=True)
-                    downvote_btn = gr.Button(value="👎  Downvote", interactive=True)
-                    # flag_btn = gr.Button(value="⚠️  Flag", interactive=True)
-                    # stop_btn = gr.Button(value="⏹️  Stop Generation", interactive=False)
+                    upvote_btn     = gr.Button(value="👍  Upvote", interactive=True)
+                    downvote_btn   = gr.Button(value="👎  Downvote", interactive=True)
+                    # flag_btn     = gr.Button(value="⚠️  Flag", interactive=True)
+                    # stop_btn     = gr.Button(value="⏹️  Stop Generation", interactive=False)
                     regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=True)
-                    clear_btn = gr.Button(value="🗑️  Clear history", interactive=True)
+                    clear_btn      = gr.Button(value="🗑️  Clear history", interactive=True)
 
         gr.Markdown(tos_markdown)
         gr.Markdown(learn_more_markdown)
 
-        submit_btn.click(generate, [image, video, first_run, state, state_, textbox, tensor, modals],
-                        [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
+        submit_btn.click(
+            generate, [image, video, first_run, state, state_, textbox, tensor, modals],
+                      [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
-        regenerate_btn.click(regenerate, [state, state_, textbox, tensor, modals], [chatbot, first_run, state, state_, textbox, tensor, modals]).then(
-            generate, [image, video, first_run, state, state_, textbox, tensor, modals], [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
+        regenerate_btn.click(
+            regenerate, [state, state_, textbox, tensor, modals], 
+                        [chatbot, first_run, state, state_, textbox, tensor, modals]).then(
+            generate, [image, video, first_run, state, state_, textbox, tensor, modals], 
+                      [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
-        clear_btn.click(clear_history, [state, state_, tensor, modals],
-                        [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
+        clear_btn.click(
+            clear_history, [state, state_, tensor, modals],
+                           [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
     demo.launch()
