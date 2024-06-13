@@ -1,14 +1,11 @@
 import os
 import shutil
-import subprocess
 
 import torch
 import tempfile
 import gradio as gr
 from PIL import Image
 from fastapi import FastAPI
-from decord import VideoReader, cpu
-from transformers import TextStreamer
 
 import sys
 sys.path.append('./')
@@ -33,7 +30,7 @@ title_markdown = ("""
 <div align="center">
     <div style="display:flex; gap: 0.25rem;" align="center">
         <a href='VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs'><img src='https://img.shields.io/badge/Github-Code-blue'></a>
-        <a href="https://arxiv.org/pdf/2406.xxxxx.pdf"><img src="https://img.shields.io/badge/Arxiv-2406.xxxxx-red"></a>
+        <a href="https://arxiv.org/pdf/2406.07476.pdf"><img src="https://img.shields.io/badge/Arxiv-2406.07476-red"></a>
         <a href='https://github.com/DAMO-NLP-SG/VideoLLaMA2/stargazers'><img src='https://img.shields.io/github/stars/DAMO-NLP-SG/VideoLLaMA2.svg?style=social'></a>
     </div>
 </div>
@@ -82,7 +79,8 @@ class Chat:
 
     @torch.inference_mode()
     def generate(self, tensor: list, modals: list, prompt: str, first_run: bool, state):
-        assert len(tensor) == len(modals) == 1
+        # TODO: support multiple turns of conversation.
+        assert len(tensor) == len(modals)
 
         # 1. prepare model, tokenizer, and processor.
         tokenizer, model, processor = self.tokenizer, self.model, self.processor
@@ -130,7 +128,7 @@ def save_video_to_local(video_path):
     return filename
 
 
-def generate(image, video, textbox_in, first_run, state, state_, tensor, modals):
+def generate(image, video, first_run, state, state_, textbox_in, tensor, modals, dtype=torch.float16):
     flag = 1
     if not textbox_in:
         if len(state_.messages) > 0:
@@ -164,9 +162,12 @@ def generate(image, video, textbox_in, first_run, state, state_, tensor, modals)
     if os.path.exists(image) and os.path.exists(video):
         raise NotImplementedError("Not support image and video at the same time")
 
+    # BUG: Only support single video and image inference now.
     if os.path.exists(image) and not os.path.exists(video):
+        text_en_in = text_en_in.replace(DEFAULT_MMODAL_TOKEN['IMAGE'], '').strip()
         text_en_in = DEFAULT_MMODAL_TOKEN['IMAGE'] + '\n' + text_en_in
     if not os.path.exists(image) and os.path.exists(video):
+        text_en_in = text_en_in.replace(DEFAULT_MMODAL_TOKEN['VIDEO'], '').strip()
         text_en_in = DEFAULT_MMODAL_TOKEN['VIDEO'] + '\n' + text_en_in
     # if os.path.exists(image) and os.path.exists(video):
     #   pass
@@ -188,146 +189,102 @@ def generate(image, video, textbox_in, first_run, state, state_, tensor, modals)
         state.append_message(state.roles[0], textbox_in + "\n" + show_images)
     state.append_message(state.roles[1], textbox_out)
 
-    return (state, state_, state.to_gradio_chatbot(), False, gr.update(value=None, interactive=True), tensor, modals, gr.update(value=image if os.path.exists(image) else None, interactive=True), gr.update(value=video if os.path.exists(video) else None, interactive=True))
+    return (gr.update(value=image if os.path.exists(image) else None, interactive=True), gr.update(value=video if os.path.exists(video) else None, interactive=True), 
+            state.to_gradio_chatbot(), False, state, state_, gr.update(value=None, interactive=True), tensor, modals)
 
 
-def regenerate(state, state_):
+def regenerate(state, state_, textbox, tensor, modals):
     state.messages.pop(-1)
     state_.messages.pop(-1)
+    tensor.pop(-1)
+    modals.pop(-1)
+    textbox = gr.update(value=None, interactive=True)
     if len(state.messages) > 0:
-        return state, state_, state.to_gradio_chatbot(), False
-    return (state, state_, state.to_gradio_chatbot(), True)
+        return state.to_gradio_chatbot(), False, state, state_, textbox, tensor, modals
+    return state.to_gradio_chatbot(), True, state, state_, textbox, tensor, modals
 
 
-def clear_history(state, state_):
+def clear_history(state, state_, tensor, modals):
     state = conv_templates[conv_mode].copy()
     state_ = conv_templates[conv_mode].copy()
     return (gr.update(value=None, interactive=True),
             gr.update(value=None, interactive=True), \
-            gr.update(value=None, interactive=True), \
-            True, state, state_, state.to_gradio_chatbot(), [], [])
+            state.to_gradio_chatbot(), \
+            True, state, state_, gr.update(value=None, interactive=True), [], [])
 
 
-conv_mode = "llama_2"
-model_path = 'publish_models/videollama2-ep3'
-device = 'cuda'
-load_8bit = True
-load_4bit = False
-dtype = torch.float16
-handler = Chat(model_path, conv_mode=conv_mode, load_8bit=load_8bit, load_4bit=load_8bit, device=device)
-# handler.model.to(dtype=dtype)
-if not os.path.exists("temp"):
-    os.makedirs("temp")
+if __name__ == '__main__':
+    conv_mode = "llama_2"
+    model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
 
-app = FastAPI()
+    handler = Chat(model_path, conv_mode=conv_mode, load_8bit=False, load_4bit=False, device='cuda')
+    handler.model.to(dtype=torch.float16)
 
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
 
-textbox = gr.Textbox(
-    show_label=False, placeholder="Enter text and press ENTER", container=False
-)
-with gr.Blocks(title='VideoLLaMA2🚀', theme=gr.themes.Default(), css=block_css) as demo:
-    gr.Markdown(title_markdown)
-    state = gr.State()
-    state_ = gr.State()
-    first_run = gr.State()
-    tensor = gr.State()
-    modals = gr.State()
+    app = FastAPI()
 
-    with gr.Row():
-        with gr.Column(scale=3):
-            image = gr.Image(label="Input Image", type="filepath")
-            video = gr.Video(label="Input Video")
+    textbox = gr.Textbox(
+        show_label=False, placeholder="Enter text and press ENTER", container=False
+    )
+    with gr.Blocks(title='VideoLLaMA2🚀', theme=gr.themes.Default(), css=block_css) as demo:
+        gr.Markdown(title_markdown)
+        state = gr.State()
+        state_ = gr.State()
+        first_run = gr.State()
+        tensor = gr.State()
+        modals = gr.State()
 
-            cur_dir = os.path.dirname(os.path.abspath(__file__))
-            gr.Examples(
-                examples=[
-                    [
-                        f"{cur_dir}/examples/extreme_ironing.jpg",
-                        "What is unusual about this image?",
+        with gr.Row():
+            with gr.Column(scale=3):
+                image = gr.Image(label="Input Image", type="filepath")
+                video = gr.Video(label="Input Video")
+
+                cur_dir = os.path.dirname(os.path.abspath(__file__))
+                gr.Examples(
+                    examples=[
+                        [
+                            f"{cur_dir}/examples/extreme_ironing.jpg",
+                            "What is unusual about this image?",
+                        ],
+                        [
+                            f"{cur_dir}/examples/waterview.jpg",
+                            "What are the things I should be cautious about when I visit here?",
+                        ],
+                        [
+                            f"{cur_dir}/examples/desert.jpg",
+                            "If there are factual errors in the questions, point it out; if not, proceed answering the question. What’s happening in the desert?",
+                        ],
                     ],
-                    [
-                        f"{cur_dir}/examples/waterview.jpg",
-                        "What are the things I should be cautious about when I visit here?",
-                    ],
-                    [
-                        f"{cur_dir}/examples/desert.jpg",
-                        "If there are factual errors in the questions, point it out; if not, proceed answering the question. What’s happening in the desert?",
-                    ],
-                ],
-                inputs=[image, textbox],
-            )
+                    inputs=[image, textbox],
+                )
 
-        with gr.Column(scale=7):
-            chatbot = gr.Chatbot(label="VideoLLaMA2", bubble_full_width=True).style(height=750)
-            with gr.Row():
-                with gr.Column(scale=8):
-                    textbox.render()
-                with gr.Column(scale=1, min_width=50):
-                    submit_btn = gr.Button(value="Send", variant="primary", interactive=True)
-            with gr.Row(elem_id="buttons") as button_row:
-                upvote_btn = gr.Button(value="👍  Upvote", interactive=True)
-                downvote_btn = gr.Button(value="👎  Downvote", interactive=True)
-                flag_btn = gr.Button(value="⚠️  Flag", interactive=True)
-                # stop_btn = gr.Button(value="⏹️  Stop Generation", interactive=False)
-                regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=True)
-                clear_btn = gr.Button(value="🗑️  Clear history", interactive=True)
+            with gr.Column(scale=7):
+                chatbot = gr.Chatbot(label="VideoLLaMA2", bubble_full_width=True).style(height=750)
+                with gr.Row():
+                    with gr.Column(scale=8):
+                        textbox.render()
+                    with gr.Column(scale=1, min_width=50):
+                        submit_btn = gr.Button(value="Send", variant="primary", interactive=True)
+                with gr.Row(elem_id="buttons") as button_row:
+                    upvote_btn = gr.Button(value="👍  Upvote", interactive=True)
+                    downvote_btn = gr.Button(value="👎  Downvote", interactive=True)
+                    # flag_btn = gr.Button(value="⚠️  Flag", interactive=True)
+                    # stop_btn = gr.Button(value="⏹️  Stop Generation", interactive=False)
+                    regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=True)
+                    clear_btn = gr.Button(value="🗑️  Clear history", interactive=True)
 
-    # with gr.Row():
-    #     gr.Examples(
-    #         examples=[
-    #             [
-    #                 f"{cur_dir}/examples/sample_img_22.png",
-    #                 f"{cur_dir}/examples/sample_demo_22.mp4",
-    #                 "Are the instruments in the pictures used in the video?",
-    #             ],
-    #             [
-    #                 f"{cur_dir}/examples/sample_img_13.png",
-    #                 f"{cur_dir}/examples/sample_demo_13.mp4",
-    #                 "Does the flag in the image appear in the video?",
-    #             ],
-    #             [
-    #                 f"{cur_dir}/examples/sample_img_8.png",
-    #                 f"{cur_dir}/examples/sample_demo_8.mp4",
-    #                 "Are the image and the video depicting the same place?",
-    #             ],
-    #         ],
-    #         inputs=[image, video, textbox],
-    #     )
-    #     gr.Examples(
-    #         examples=[
-    #             [
-    #                 f"{cur_dir}/examples/sample_demo_1.mp4",
-    #                 "Why is this video funny?",
-    #             ],
-    #             [
-    #                 f"{cur_dir}/examples/sample_demo_3.mp4",
-    #                 "Can you identify any safety hazards in this video?"
-    #             ],
-    #             [
-    #                 f"{cur_dir}/examples/sample_demo_9.mp4",
-    #                 "Describe the video.",
-    #             ],
-    #             [
-    #                 f"{cur_dir}/examples/sample_demo_22.mp4",
-    #                 "Describe the activity in the video.",
-    #             ],
-    #         ],
-    #         inputs=[video, textbox],
-    #     )
-    gr.Markdown(tos_markdown)
-    gr.Markdown(learn_more_markdown)
+        gr.Markdown(tos_markdown)
+        gr.Markdown(learn_more_markdown)
 
-    submit_btn.click(generate, [image, video, textbox, first_run, state, state_, tensor, modals],
-                     [state, state_, chatbot, first_run, textbox, tensor, modals, image, video])
+        submit_btn.click(generate, [image, video, first_run, state, state_, textbox, tensor, modals],
+                        [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
-    regenerate_btn.click(regenerate, [state, state_], [state, state_, chatbot, first_run]).then(
-        generate, [image, video, textbox, first_run, state, state_, tensor, modals], [state, state_, chatbot, first_run, textbox, tensor, modals, image, video])
+        regenerate_btn.click(regenerate, [state, state_, textbox, tensor, modals], [chatbot, first_run, state, state_, textbox, tensor, modals]).then(
+            generate, [image, video, first_run, state, state_, textbox, tensor, modals], [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
-    clear_btn.click(clear_history, [state, state_],
-                    [image, video, textbox, first_run, state, state_, chatbot, tensor, modals])
+        clear_btn.click(clear_history, [state, state_, tensor, modals],
+                        [image, video, chatbot, first_run, state, state_, textbox, tensor, modals])
 
-# app = gr.mount_gradio_app(app, demo, path="/")
-demo.launch(share=True)
-
-# uvicorn videollama2.serve.gradio_web_server:app
-# python -m videollama2.serve.gradio_web_server
+    demo.launch()
