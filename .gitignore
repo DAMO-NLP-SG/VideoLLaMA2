@@ -32,6 +32,7 @@ temp*/
 
 # Demo
 serve_images/
+temp/
 
 # data folder
 data/
@@ -48,8 +49,9 @@ checkpoints/
 work_dirs*/
 
 # evaluation folder
-eval/
+/eval/
 
 # pretrained weights
 pretrained/
 publish_models/
+public_models/
