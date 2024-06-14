@@ -90,6 +90,15 @@ It is highly recommended to try our [online demo](https://huggingface.co/spaces/
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
 
+### Single-model Version
+
+* Launch a gradio app directly ([VideoLLaMA2-7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B) is adopted by default):
+```bash
+python videollama2/serve/gradio_web_server_adhoc.py
+```
+
+### Multi-model Version
+
 1. Launch a global controller
 ```bash
 cd /path/to/VideoLLaMA2
