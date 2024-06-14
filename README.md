@@ -14,8 +14,6 @@
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FDAMO-NLP-SG%2FVideoLLaMA2&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitor&edge_flat=false)](https://hits.seeyoufarm.com)
 [![GitHub issues](https://img.shields.io/github/issues/DAMO-NLP-SG/VideoLLaMA2?color=critical&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aopen+is%3Aissue)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/DAMO-NLP-SG/VideoLLaMA2?color=success&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aissue+is%3Aclosed)  <br>
-[![twitter](https://img.shields.io/badge/-Twitter@AK-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
-[![twitter](https://img.shields.io/badge/-Twitter@Adina%20Yakup-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
 
 </h5>
 
