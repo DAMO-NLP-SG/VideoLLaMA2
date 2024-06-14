@@ -54,9 +54,10 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         kwargs['attn_implementation'] = 'flash_attention_2'
 
     if "videollama" in model_name.lower():
-        # Load LLaVA model
+        # NOTE: lora model loading needs to appoint the base model
         if 'lora' in model_name.lower() and model_base is None:
             warnings.warn('There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged.')
+        # NOTE: lora model loading
         if 'lora' in model_name.lower() and model_base is not None:
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
@@ -91,6 +92,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             print('Merging LoRA weights...')
             model = model.merge_and_unload()
             print('Model is loaded...')
+        # NOTE: Base/Pretrain model loading
         elif model_base is not None or '-base' in model_name.lower():
             # loading vision-language projector
             print('Loading VideoLLaMA 2 from base model...')
