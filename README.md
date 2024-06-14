@@ -8,6 +8,17 @@
 <details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
 <!--  may -->
 
+<h5 align="center">
+
+[![hf_space](https://img.shields.io/badge/🤗-Open%20In%20Spaces-9C276A.svg)](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
+[![arXiv](https://img.shields.io/badge/Arxiv-2406.07476-AD1C18.svg?logo=arXiv)](https://arxiv.org/abs/2406.07476) <br>
+[![License](https://img.shields.io/badge/License-Apache%202.0-yellow)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/blob/main/LICENSE) 
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FDAMO-NLP-SG%2FVideoLLaMA2&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitor&edge_flat=false)](https://hits.seeyoufarm.com)
+[![GitHub issues](https://img.shields.io/github/issues/DAMO-NLP-SG/VideoLLaMA2?color=critical&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aopen+is%3Aissue)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/DAMO-NLP-SG/VideoLLaMA2?color=success&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aissue+is%3Aclosed)  <br>
+[![twitter](https://img.shields.io/badge/-Twitter@AK-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
+</h5>
+
 > [**Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding**](https://github.com/DAMO-NLP-SG/Video-LLaMA) <br>
 > Hang Zhang, Xin Li, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/Video-LLaMA)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/Video-LLaMA.svg?style=social)](https://github.com/DAMO-NLP-SG/Video-LLaMA) [![arXiv](https://img.shields.io/badge/Arxiv-2306.02858-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2306.02858) <br>
@@ -22,6 +33,7 @@
 
 
 ## 📰 News
+* **[2024.06.14]**  🔥🔥 [Online Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2) is available.
 * **[2024.06.03]**  Release training, evaluation, and serving codes of VideoLLaMA 2.
 
 
@@ -217,13 +229,6 @@ def inference():
     # The video features a kitten and a baby chick playing together. The kitten is seen laying on the floor while the baby chick hops around. The two animals interact playfully with each other, and the video has a cute and heartwarming feel to it.
     modal_list = ['video']
 
-    # Video Inference
-    paths = ['assets/sora.mp4']
-    questions = ['Please describe this video.']
-    # Reply:
-    # The video features a series of colorful kites flying in the sky. The kites are first seen flying over trees, and then they are shown flying in the sky. The kites come in various shapes and colors, including red, green, blue, and yellow. The video captures the kites soaring gracefully through the air, with some kites flying higher than others. The sky is clear and blue, and the trees below are lush and green. The kites are the main focus of the video, and their vibrant colors and intricate designs are highlighted against the backdrop of the sky and trees. Overall, the video showcases the beauty and artistry of kite-flying, and it is a delight to watch the kites dance and glide through the air.
-    modal_list = ['video']
-
     # Image Inference
     paths = ['assets/sora.png']
     questions = ['What is the woman wearing, what is she doing, and how does the image feel?']
@@ -279,7 +284,9 @@ if __name__ == "__main__":
 ```
 
 
-## 🤗 Demo
+## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
+
+It is highly recommended to try our [online demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2) first.
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
 
