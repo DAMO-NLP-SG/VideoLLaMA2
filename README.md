@@ -14,6 +14,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/DAMO-NLP-SG/VideoLLaMA2?color=critical&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aopen+is%3Aissue)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/DAMO-NLP-SG/VideoLLaMA2?color=success&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aissue+is%3Aclosed)  <br>
 [![twitter](https://img.shields.io/badge/-Twitter@AK-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
+[![twitter](https://img.shields.io/badge/-Twitter@Adina%20Yakup-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
 
 </h5>
 
