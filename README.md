@@ -5,9 +5,6 @@
 <h3 align="center"><a href="https://arxiv.org/abs/2406.07476">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.  </h2>
 
-<details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
-<!--  may -->
-
 <h5 align="center">
 
 [![hf_space](https://img.shields.io/badge/🤗-Open%20In%20Spaces-9C276A.svg)](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
@@ -17,7 +14,11 @@
 [![GitHub issues](https://img.shields.io/github/issues/DAMO-NLP-SG/VideoLLaMA2?color=critical&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aopen+is%3Aissue)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/DAMO-NLP-SG/VideoLLaMA2?color=success&label=Issues)](https://github.com/DAMO-NLP-SG/VideoLLaMA2/issues?q=is%3Aissue+is%3Aclosed)  <br>
 [![twitter](https://img.shields.io/badge/-Twitter@AK-black?logo=twitter&logoColor=1D9BF0)](https://x.com/_akhaliq/status/1800914379023466847)
+
 </h5>
+
+<details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
+<!--  may -->
 
 > [**Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding**](https://github.com/DAMO-NLP-SG/Video-LLaMA) <br>
 > Hang Zhang, Xin Li, Lidong Bing <br>
