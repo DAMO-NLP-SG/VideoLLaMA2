@@ -2,8 +2,9 @@
     <img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/blob/e7bc34e0e9a96d77947a75b54399d9f96ccf209d/assets/logo.png" width="150" style="margin-bottom: 0.2;"/>
 <p>
 
-<h3 align="center"><a href="https://arxiv.org/abs/2406.07476" style="color:#9C276A">VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
-<h5 align="center"> If our project helps you, please give us a star ⭐ on GitHub to support us 🙏🙏 </h2>
+<h3 align="center"><a href="https://arxiv.org/abs/2406.07476" style="color:#9C276A">
+VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs</a></h3>
+<h5 align="center"> If our project helps you, please give us a star ⭐ on GitHub to support us. 🙏🙏 </h2>
 
 <h5 align="center">
 
