@@ -88,6 +88,7 @@ class ModelArguments:
     # Other Arguments
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
+    pretrain_model_name_or_path: Optional[str] = field(default=None, metadata={"help": "To train from previously trained checkpoints. E.g, further fine-tuning based on the finetuned version of the whole model."})
 
 
 @dataclass
@@ -772,13 +773,17 @@ def train(attn_implementation=None):
                 bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
             )
         ))
-
+    if model_args.pretrain_model_name_or_path is not None:
+        assert os.path.exists(model_args.pretrain_model_name_or_path)
+        pretrain_model_name_or_path = model_args.pretrain_model_name_or_path
+    else:
+        pretrain_model_name_or_path = model_args.model_name_or_path
     if model_args.vision_tower is not None:
         if 'mistral' in model_args.model_name_or_path.lower():
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MistralForCausalLM.from_pretrained(
-                model_args.model_name_or_path,
+                pretrain_model_name_or_path
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -789,7 +794,7 @@ def train(attn_implementation=None):
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MixtralForCausalLM.from_pretrained(
-                model_args.model_name_or_path,
+                pretrain_model_name_or_path
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -802,7 +807,7 @@ def train(attn_implementation=None):
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2LlamaForCausalLM.from_pretrained(
-                model_args.model_name_or_path,
+                pretrain_model_name_or_path
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -813,7 +818,7 @@ def train(attn_implementation=None):
         config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
         config._attn_implementation = attn_implementation
         model = transformers.LlamaForCausalLM.from_pretrained(
-            model_args.model_name_or_path,
+            pretrain_model_name_or_path
             config=config,
             cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
