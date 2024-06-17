@@ -321,7 +321,7 @@ if __name__ == "__main__":
     inference()
 ```
 
-## Citation
+## 📑 Citation
 
 If you find VideoLLaMA useful for your research and applications, please cite using this BibTeX:
 ```bibtex
