@@ -321,6 +321,27 @@ if __name__ == "__main__":
     inference()
 ```
 
+## Citation
+
+If you find VideoLLaMA useful for your research and applications, please cite using this BibTeX:
+```bibtex
+@article{damonlpsg2024videollama2,
+  title={VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Video-LLMs},
+  author={Cheng, Zesen and Leng, Sicong and Zhang, Hang and Xin, Yifei and Li, Xin and Chen, Guanzheng and Zhu, Yongxin and Zhang, Wenqi and Luo, Ziyang and Zhao, Deli and Bing, Lidong},
+  journal={arXiv preprint arXiv:2406.07476},
+  year={2024},
+  url = {https://arxiv.org/abs/2406.07476}
+}
+
+@article{damonlpsg2023videollama,
+  title = {Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding},
+  author = {Zhang, Hang and Li, Xin and Bing, Lidong},
+  journal = {arXiv preprint arXiv:2306.02858},
+  year = {2023},
+  url = {https://arxiv.org/abs/2306.02858}
+}
+```
+
 ## 👍 Acknowledgement
 The codebase of VideoLLaMA 2 is adapted from [**LLaVA 1.5**](https:github.com/haotian-liu/LLaVA) and [**FastChat**](https://github.com/lm-sys/FastChat). We are also grateful for the following projects our VideoLLaMA 2 arise from:
 * [**LLaMA 2**](https://github.com/meta-llama/llama), [**Mistral-7B**](https://mistral.ai/news/announcing-mistral-7b/), [**OpenAI CLIP**](https://openai.com/index/clip/), [**Honeybee**](https://github.com/kakaobrain/honeybee).
