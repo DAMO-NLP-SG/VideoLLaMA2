@@ -137,7 +137,7 @@ def run_inference(args):
                 mode='vanilla',
                 model=model,
                 tokenizer=tokenizer,
-                do_sample=True
+                do_sample=False
             )
 
             new_record['questions'][idx]['response'] = videomme_dump(output)

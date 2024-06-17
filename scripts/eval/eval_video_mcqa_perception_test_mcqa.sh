@@ -1,13 +1,9 @@
 set -x
 
-EVAL_DATA_DIR=/mnt/chengzs/dataset/videollm_eval
-OUTPUT_DIR=eval
-# CKPT_NAME=videollama2-mixtral8x7b-ep3_1200st
-# CKPT_NAME=videollama2-16f-ep3
-# CKPT=publish_models/${CKPT_NAME}
-CKPT_NAME=VideoLLaMA2
-CKPT=ClownRat/${CKPT_NAME}
-# CKPT=DAMO-NLP-SG/${CKPT_NAME}
+EVAL_DATA_DIR=eval
+OUTPUT_DIR=eval_output
+CKPT_NAME=VideoLLaMA2-7B
+CKPT=DAMO-NLP-SG/${CKPT_NAME}
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"
@@ -21,7 +17,7 @@ output_file=${OUTPUT_DIR}/perception_test_mcqa/answers/${CKPT_NAME}/merge.json
 for IDX in $(seq 0 $((CHUNKS-1))); do
     # select the GPUs for the task
     gpu_devices=$(IFS=,; echo "${GPULIST[*]:$(($IDX*$GPUS_PER_TASK)):$GPUS_PER_TASK}")    
-    TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/new_eval/inference_video_mcqa_perception_test_mcqa.py \
+    TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_video_mcqa_perception_test_mcqa.py \
         --model-path ${CKPT} \
         --video-folder ${EVAL_DATA_DIR}/perception_test_mcqa/videos \
         --question-file ${EVAL_DATA_DIR}/perception_test_mcqa/mc_question_test.json \
