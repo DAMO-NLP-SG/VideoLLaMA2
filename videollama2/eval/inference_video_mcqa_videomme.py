@@ -145,9 +145,9 @@ def load_parquet(parquet_file):
                 "video_id": record.video_id,
                 "youtube_id": record.videoID,
                 "url": record.url,
-                "duration_category": record.duration,
-                "video_category": record.domain,
-                "video_subcategory": record.sub_category,
+                "duration": record.duration,
+                "domain": record.domain,
+                "sub_category": record.sub_category,
                 "questions": [
                     {
                         "question_id": record.question_id,

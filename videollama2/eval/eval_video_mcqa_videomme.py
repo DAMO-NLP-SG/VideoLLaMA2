@@ -125,7 +125,7 @@ def eval_your_results(
     for video_type in video_types:
 
         # Filter your results based on video types
-        your_results_video_type = [item for item in your_results if item["duration_category"] == video_type]
+        your_results_video_type = [item for item in your_results if item["duration"] == video_type]
 
         # Task Categories
         q_type_dict[video_type] = {}
@@ -151,8 +151,8 @@ def eval_your_results(
                 continue
 
             # Get the video category, sub category and question category
-            video_category = item["video_category"]
-            video_sub_category = item["video_subcategory"]
+            video_category = item["domain"]
+            video_sub_category = item["sub_category"]
             
             questions = item["questions"]
 
@@ -185,7 +185,7 @@ def eval_your_results(
         print("=====================================")
         if return_categories_accuracy:
             print("-------------------------------------")
-            print("Video Categories")
+            print("Video Domains")
             print("-------------------------------------")
             for v_type in v_type_dict[video_type]:
                 print(f"{v_type}: {100 * v_type_dict[video_type][v_type]['correct'] / v_type_dict[video_type][v_type]['answered'] if v_type_dict[video_type][v_type]['answered'] > 0 else 0 : .1f}%")
