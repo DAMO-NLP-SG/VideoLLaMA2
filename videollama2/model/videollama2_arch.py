@@ -20,6 +20,7 @@ import einops
 import torch
 import torch.nn as nn
 
+from .multimodal_projector import load_mm_projector
 from .multimodal_encoder.builder import build_vision_tower
 from .multimodal_projector.builder import build_vision_projector
 from ..mm_utils import get_anyres_image_grid_shape
