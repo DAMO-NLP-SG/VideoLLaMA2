@@ -759,7 +759,6 @@ def train(attn_implementation=None):
     if training_args.bits in [4, 8]:
         from transformers import BitsAndBytesConfig
         bnb_model_from_pretrained_args.update(dict(
-            local_files_only=False,
             device_map={"": training_args.device},
             load_in_4bit=training_args.bits == 4,
             load_in_8bit=training_args.bits == 8,
@@ -781,7 +780,7 @@ def train(attn_implementation=None):
         pretrain_model_name_or_path = model_args.model_name_or_path
     if model_args.vision_tower is not None:
         if 'mistral' in model_args.model_name_or_path.lower():
-            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True, local_files_only=False)
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MistralForCausalLM.from_pretrained(
                 pretrain_model_name_or_path,
@@ -792,7 +791,7 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
         elif 'mixtral' in model_args.model_name_or_path.lower():
-            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True, local_files_only=False)
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MixtralForCausalLM.from_pretrained(
                 pretrain_model_name_or_path,
@@ -805,7 +804,7 @@ def train(attn_implementation=None):
             import deepspeed
             deepspeed.utils.set_z3_leaf_modules(model, [MixtralSparseMoeBlock])
         else:
-            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True, local_files_only=False)
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2LlamaForCausalLM.from_pretrained(
                 pretrain_model_name_or_path,
@@ -816,7 +815,7 @@ def train(attn_implementation=None):
                 **bnb_model_from_pretrained_args
             )
     else:
-        config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True, local_files_only=False)
+        config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
         config._attn_implementation = attn_implementation
         model = transformers.LlamaForCausalLM.from_pretrained(
             pretrain_model_name_or_path,
@@ -869,7 +868,6 @@ def train(attn_implementation=None):
         model_max_length=training_args.model_max_length,
         padding_side="right",
         use_fast=True,
-        local_files_only=False,
     )
 
     if model_args.version == "v0":
