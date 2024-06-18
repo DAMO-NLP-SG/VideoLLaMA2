@@ -783,7 +783,7 @@ def train(attn_implementation=None):
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MistralForCausalLM.from_pretrained(
-                pretrain_model_name_or_path
+                pretrain_model_name_or_path,
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -794,7 +794,7 @@ def train(attn_implementation=None):
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MixtralForCausalLM.from_pretrained(
-                pretrain_model_name_or_path
+                pretrain_model_name_or_path,
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -807,7 +807,7 @@ def train(attn_implementation=None):
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2LlamaForCausalLM.from_pretrained(
-                pretrain_model_name_or_path
+                pretrain_model_name_or_path,
                 config=config,
                 cache_dir=training_args.cache_dir,
                 torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
@@ -818,7 +818,7 @@ def train(attn_implementation=None):
         config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
         config._attn_implementation = attn_implementation
         model = transformers.LlamaForCausalLM.from_pretrained(
-            pretrain_model_name_or_path
+            pretrain_model_name_or_path,
             config=config,
             cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
