@@ -7,7 +7,10 @@ import argparse
 import warnings
 import traceback
 
+import cv2
 import torch
+import pysubs2
+import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
@@ -30,12 +33,40 @@ def get_chunk(lst, n, k):
     return chunks[k]
 
 
+def get_seq_frames(total_num_frames, desired_num_frames):
+    """
+    Calculate the indices of frames to extract from a video.
+
+    Parameters:
+    total_num_frames (int): Total number of frames in the video.
+    desired_num_frames (int): Desired number of frames to extract.
+
+    Returns:
+    list: List of indices of frames to extract.
+    """
+
+    # Calculate the size of each segment from which a frame will be extracted
+    seg_size = float(total_num_frames - 1) / desired_num_frames
+
+    seq = []
+    for i in range(desired_num_frames):
+        # Calculate the start and end indices of each segment
+        start = int(np.round(seg_size * i))
+        end = int(np.round(seg_size * (i + 1)))
+
+        # Append the middle index of the segment to the list
+        seq.append((start + end) // 2)
+
+    return seq
+
+
 class VideoMMEDataset(Dataset):
 
     video_formats = ['.mp4', '.avi', '.mov', '.mkv']
 
-    def __init__(self, data_folder, data_list, processor):
-        self.data_folder = data_folder
+    def __init__(self, video_folder, subtitle_folder, data_list, processor):
+        self.video_folder = video_folder
+        self.subtitle_folder = subtitle_folder
         self.data_list = data_list
         self.processor = processor
 
@@ -45,37 +76,64 @@ class VideoMMEDataset(Dataset):
     def __getitem__(self, idx):
         line = self.data_list[idx]
 
-        video_ytid = line['url'][-11:]
+        video_ytid = line['url'].split('watch?v=')[-1]
 
         for fmt in self.video_formats:  # Added this line
-            temp_path = os.path.join(self.data_folder, f'v_{video_ytid}{fmt}')
+            temp_path = os.path.join(self.video_folder, f'{video_ytid}{fmt}')
             if os.path.exists(temp_path):
                 video_path = temp_path
                 break
 
+        subtitle_path = os.path.join(self.subtitle_folder, f'{video_ytid}.srt')
+
         try:
             video_tensor = self.processor(video_path)
+            num_frames = video_tensor.shape[0]
         except:
             traceback.print_exc()
             print(f'It occurs error when reading {video_ytid}')
             video_tensor = None
+            num_frames = 0
+
+        if video_tensor is not None and os.path.exists(subtitle_path):
+            cv2_vr = cv2.VideoCapture(video_path)
+            duration = int(cv2_vr.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cv2_vr.get(cv2.CAP_PROP_FPS)
+            selected_frame_ids = get_seq_frames(duration, num_frames)
+
+            subs = pysubs2.load(subtitle_path, encoding="utf-8")
+            subtitles = []
+            for seleced_frame_id in selected_frame_ids:
+                sub_text = ""
+                cur_time = pysubs2.make_time(fps=fps, frames=seleced_frame_id)
+                for sub in subs:
+                    if sub.start < cur_time and sub.end > cur_time:
+                        sub_text = sub.text.replace("\\N", " ")
+                        break
+                if sub_text.strip():
+                    subtitles.append(sub_text)
+            subtitles = "\n".join(subtitles)
+        else:
+            subtitles = ""
 
         return {
-            'video': video_tensor, 
+            'video': video_tensor,
+            'subtitle': subtitles,
             'record': line,
         }
 
 
 def collate_fn(batch):
     vid = [x['video'] for x in batch]
+    sub = [x['subtitle'] for x in batch]
     rcs = [x['record'] for x in batch]
-    return vid, rcs
+    return vid, sub, rcs
 
 
 def build_videomme_eval(args, processor):
     questions = json.load(open(args.question_file, "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
-    dataset = VideoMMEDataset(args.video_folder, questions, processor)
+    dataset = VideoMMEDataset(args.video_folder, args.subtitle_folder, questions, processor)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, collate_fn=collate_fn)
 
     return dataloader
@@ -101,24 +159,31 @@ def run_inference(args):
     model, processor, tokenizer = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
+    answer_sub_file = answer_file.replace('.json', '_sub.json')
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
     ans_file = open(answer_file, "w")
+    ans_sub_file = open(answer_sub_file, "w")
 
     val_loader = build_videomme_eval(args, processor)
 
     # Iterate over each sample in the ground truth file
-    for i, (videos, records) in enumerate(tqdm(val_loader)):
+    for i, (videos, subtitles, records) in enumerate(tqdm(val_loader)):
         video_tensor  = videos[0]
+        subtitle = subtitles[0]
         record = records[0]
 
         new_record = copy.deepcopy(record)
+        new_record_sub = copy.deepcopy(record)
 
         if video_tensor is None:
             new_record['missing'] = True
             ans_file.write(json.dumps(new_record) + ",\n")
+            new_record_sub['missing'] = True
+            ans_sub_file.write(json.dumps(new_record_sub) + ",\n")
             continue
         else:
             new_record['missing'] = False
+            new_record_sub['missing'] = False
 
         questions = record['questions']
         for idx, question in enumerate(questions):
@@ -128,23 +193,20 @@ def run_inference(args):
             instruct = "Select the best answer to the following multiple-choice question based on the video. Respond with only the letter (A, B, C, or D) of the correct option.\n"
             instruct += f"{q}\n"
             for op_idx, op in enumerate(ops):
-                instruct += f"{chr(65 + op_idx)}. {op}\n"
+                instruct += f"{op}\n"
             instruct += "The best answer is: "
-            
-            output = x_infer(
-                video_tensor,
-                instruct,
-                mode='vanilla',
-                model=model,
-                tokenizer=tokenizer,
-                do_sample=False
-            )
-
+            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
             new_record['questions'][idx]['response'] = videomme_dump(output)
 
+            instruct = f"This video's subtitles are listed below:\n{subtitle}\n" + instruct
+            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
+            new_record_sub['questions'][idx]['response'] = videomme_dump(output)
+
         ans_file.write(json.dumps(new_record) + ",\n")
+        ans_sub_file.write(json.dumps(new_record_sub) + ",\n")
 
     ans_file.close()
+    ans_sub_file.close()
 
 
 if __name__ == "__main__":
@@ -152,6 +214,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--model-path', help='', required=True)
     parser.add_argument('--video-folder', help='Directory containing video files.', required=True)
+    parser.add_argument('--subtitle-folder', help='Directory containing subtitle files.', required=True)
     parser.add_argument('--question-file', help='Path to the ground truth file containing question.', required=True)
     parser.add_argument('--answer-file', help='Path to the ground truth file containing answers.', required=True)
     parser.add_argument("--num-chunks", type=int, default=1)

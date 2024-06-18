@@ -377,7 +377,20 @@ def process_image(image_path, processor, aspect_ratio='pad', num_frames=NUM_FRAM
 def process_video(video_path, processor, aspect_ratio='pad', num_frames=NUM_FRAMES, image_grid=False, sample_scheme='uniform'):
     def frame_sample(duration, mode='uniform', local_fps=None):
         if mode == 'uniform':
-            return np.linspace(0, duration-1, num_frames, dtype=int)
+            # Calculate the size of each segment from which a frame will be extracted
+            seg_size = float(duration - 1) / num_frames
+
+            frame_ids = []
+            for i in range(num_frames):
+                # Calculate the start and end indices of each segment
+                start = int(np.round(seg_size * i))
+                end = int(np.round(seg_size * (i + 1)))
+                # Append the middle index of the segment to the list
+                frame_ids.append((start + end) // 2)
+
+            return frame_ids
+            # NOTE: old version
+            # return np.linspace(0, duration-1, num_frames, dtype=int)
         elif mode == 'fps':
             assert local_fps is not None
             segment_len = min(local_fps // NUM_FRAMES_PER_SECOND, duration)

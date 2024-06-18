@@ -11,7 +11,7 @@ from .constants import NUM_FRAMES, DEFAULT_MMODAL_TOKEN, DEFAULT_MMODAL_START_TO
 
 
 def model_init(model_path=None):
-    model_path = "ClownRat/VideoLLaMA2" if model_path is None else model_path
+    model_path = "DAMO-NLP-SG/VideoLLaMA2-7B" if model_path is None else model_path
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
 
