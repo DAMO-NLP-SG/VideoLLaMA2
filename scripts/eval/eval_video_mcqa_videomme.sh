@@ -2,7 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-CKPT_NAME=VideoLLaMA2-7B-16F
+CKPT_NAME=VideoLLaMA2-7B
 CKPT=DAMO-NLP-SG/${CKPT_NAME}
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -29,7 +29,7 @@ if [ ! -f "$output_file" ]; then
             --model-path ${CKPT} \
             --video-folder ${EVAL_DATA_DIR}/videomme/videos \
             --subtitle-folder ${EVAL_DATA_DIR}/videomme/subtitles \
-            --question-file ${EVAL_DATA_DIR}/videomme/videomme.json \
+            --question-file ${EVAL_DATA_DIR}/videomme/test-00000-of-00001.parquet \
             --answer-file ${OUTPUT_DIR}/videomme/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
             --num-chunks $CHUNKS \
             --chunk-idx $IDX &
