@@ -11,6 +11,7 @@ import cv2
 import torch
 import pysubs2
 import numpy as np
+import pyarrow.parquet as pq
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
@@ -130,8 +131,49 @@ def collate_fn(batch):
     return vid, sub, rcs
 
 
+def load_parquet(parquet_file):
+    table = pq.read_table(parquet_file)
+
+    # Convert PyArrow Table to pandas DataFrame
+    df = table.to_pandas()
+
+    jsons = []
+    for record in df.itertuples():
+
+        if len(jsons) < int(record.video_id):
+            jsons.append({
+                "video_id": record.video_id,
+                "youtube_id": record.videoID,
+                "url": record.url,
+                "duration_category": record.duration,
+                "video_category": record.domain,
+                "video_subcategory": record.sub_category,
+                "questions": [
+                    {
+                        "question_id": record.question_id,
+                        "task_type": record.task_type,
+                        "question": record.question,
+                        "choices": list(record.options),
+                        "answer": record.answer,
+                    }
+                ]
+            })
+        else:
+            jsons[-1]['questions'].append({
+                "question_id": record.question_id,
+                "task_type": record.task_type,
+                "question": record.question,
+                "choices": list(record.options),
+                "answer": record.answer,
+            })
+
+    return jsons
+
+
 def build_videomme_eval(args, processor):
-    questions = json.load(open(args.question_file, "r"))
+    # convert parquet to json
+    questions = load_parquet(args.question_file)
+    # questions = json.load(open(args.question_file, "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
     dataset = VideoMMEDataset(args.video_folder, args.subtitle_folder, questions, processor)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, collate_fn=collate_fn)
