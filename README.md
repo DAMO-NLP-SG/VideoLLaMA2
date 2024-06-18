@@ -164,6 +164,10 @@ VideoLLaMA2
 │   ├── perception_test_mcqa # Official website: https://huggingface.co/datasets/OpenGVLab/MVBench
 |   |   ├── videos/ # Available at: https://storage.googleapis.com/dm-perception-test/zip_data/test_videos.zip
 |   |   └── mc_question_test.json # Download from https://storage.googleapis.com/dm-perception-test/zip_data/mc_question_test_annotations.zip
+│   ├── videomme # Official website: https://video-mme.github.io/home_page.html#leaderboard
+|   |   ├── test-00000-of-00001.parquet
+|   |   ├── videos/
+|   |   └── subtitles/
 │   ├── Activitynet_Zero_Shot_QA # Official website: https://github.com/MILVLG/activitynet-qa
 |   |   ├── all_test/   # Available at: https://mbzuaiac-my.sharepoint.com/:u:/g/personal/hanoona_bangalath_mbzuai_ac_ae/EatOpE7j68tLm2XAd0u6b8ABGGdVAwLMN6rqlDGM_DwhVA?e=90WIuW
 |   |   ├── test_q.json # Available at: https://github.com/MILVLG/activitynet-qa/tree/master/dataset
