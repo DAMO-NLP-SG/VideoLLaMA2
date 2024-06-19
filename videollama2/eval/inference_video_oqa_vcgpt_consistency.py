@@ -7,27 +7,14 @@ import warnings
 from tqdm import tqdm
 
 import torch
-import decord
-import numpy as np
-import transformers
-from decord import VideoReader, cpu
 from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2.conversation import conv_templates, SeparatorStyle
-from videollama2.constants import NUM_FRAMES, DEFAULT_MMODAL_TOKEN, DEFAULT_MMODAL_START_TOKEN, DEFAULT_MMODAL_END_TOKEN, MMODAL_TOKEN_INDEX
-from videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, KeywordsStoppingCriteria, process_video
-from videollama2.model.builder import load_pretrained_model
-
+from videollama2 import model_init, x_infer
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
-
-default_mm_token = DEFAULT_MMODAL_TOKEN["VIDEO"]
-default_mm_start_token =  DEFAULT_MMODAL_START_TOKEN["VIDEO"]
-default_mm_end_token = DEFAULT_MMODAL_END_TOKEN["VIDEO"]
-modal_token_index = MMODAL_TOKEN_INDEX["VIDEO"]
 
 
 def split_list(lst, n):
@@ -45,10 +32,9 @@ class VCGPTDataset(Dataset):
 
     video_formats = ['.mp4', '.avi', '.mov', '.mkv']
 
-    def __init__(self, data_list, processor, num_frames):
+    def __init__(self, data_list, processor):
         self.data_list = data_list
         self.processor = processor
-        self.num_frames = num_frames
 
     def __len__(self):
         return len(self.data_list)
@@ -66,7 +52,7 @@ class VCGPTDataset(Dataset):
                 video_path = temp_path
                 break
 
-        video_tensor = process_video(video_path, self.processor, aspect_ratio=None, sample_scheme='uniform', num_frames=self.num_frames)
+        video_tensor = self.processor(video_path)
 
         return {
             'video': video_tensor,
@@ -87,51 +73,15 @@ def collate_fn(batch):
     return vid, v_id, qus1, qus2, ans
 
 
-def get_model_output(model, tokenizer, qs, video_tensor, args):
-    if model.config.mm_use_im_start_end:
-        qs = default_mm_start_token + default_mm_token + default_mm_end_token + "\n" + qs
-    else:
-        qs = default_mm_token + "\n" + qs
-
-    conv = conv_templates[args.conv_mode].copy()
-    conv.append_message(conv.roles[0], qs)
-    conv.append_message(conv.roles[1], None)
-    prompt = conv.get_prompt()
-
-    # input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(args.device)
-    input_ids = tokenizer_MMODAL_token(prompt, tokenizer, modal_token_index, return_tensors='pt').to(args.device)
-
-    attention_mask=input_ids.ne(tokenizer.pad_token_id).to(args.device)
-
-    modal_list = ["video"]
-    video_tensor = video_tensor.to(dtype=torch.float16, device=args.device, non_blocking=True)
-
-    with torch.inference_mode():
-        output_ids = model.generate(
-            input_ids.unsqueeze(0),
-            attention_mask=attention_mask.unsqueeze(0),
-            images_or_videos=[video_tensor],
-            modal_list=modal_list,
-            do_sample=False,
-            max_new_tokens=1024,
-            use_cache=True,
-            pad_token_id=tokenizer.eos_token_id)
-
-    outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-    return outputs
-
-
 def run_inference(args):
-    model_name = get_model_name_from_path(args.model_path)
-    tokenizer, model, processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
-
-    num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
+    # Initialize the model
+    model, processor, tokenizer = model_init(args.model_path)
 
     questions = json.load(open(args.question_file, "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
 
     assert args.batch_size == 1, "Batch size must be 1 for inference"
-    dataset = VCGPTDataset(questions, processor, num_frames)
+    dataset = VCGPTDataset(questions, processor)
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     answer_file = os.path.expanduser(args.answer_file)
@@ -150,8 +100,23 @@ def run_inference(args):
         question2 = questions2[0]
         answer = answers[0]
 
-        output1 = get_model_output(model, tokenizer, question1, video_tensor, args)
-        output2 = get_model_output(model, tokenizer, question2, video_tensor, args)
+        output1 = x_infer(
+            video_tensor,
+            question1, 
+            mode='vanilla',
+            model=model,
+            tokenizer=tokenizer,
+            do_sample=False,
+        )
+
+        output2 = x_infer(
+            video_tensor,
+            question2, 
+            mode='vanilla',
+            model=model,
+            tokenizer=tokenizer,
+            do_sample=False,
+        )
 
         qa = {'video_name': video_name, 'Q1': question1, 'Q2': question2, 'A': answer, 'P1': output1, 'P2': output2}
 
