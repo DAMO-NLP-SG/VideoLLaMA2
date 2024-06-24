@@ -2,6 +2,7 @@ import os
 import re
 import math
 import json
+import traceback
 import argparse
 import warnings
 
@@ -230,13 +231,15 @@ def mvbench_dump(ans_file, line, outputs):
         answer_idx = line['answer_idx'][idx].item()
 
         pred_answer = re.findall(f'[\(,\ ]*[{letters[0]}-{letters[-1]}][\),\ ]*', output)
-        if len(pred_answer) == 0:
-            pred_idx = (answer_idx + 1) % len(letters)
-        else:
+        try:
+            assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['video_path'], instruct + '\n' + output)
             pred_answer = pred_answer[0].strip()
             if pred_answer.startswith('('):
                 pred_answer = pred_answer.strip('()')
             pred_idx = letters.index(pred_answer)
+        except:
+            traceback.print_exc()
+            pred_idx = 2
 
         ans_file.write(json.dumps({"vid": vid, "task_type": task_type, "pred": pred_idx, "gt": answer_idx}) + '\n')
 

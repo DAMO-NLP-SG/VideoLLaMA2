@@ -84,13 +84,16 @@ def egoschema_dump(ans_file, line, outputs):
         letters = ['A', 'B', 'C', 'D', 'E']
 
         pred_answer = re.findall('[\(\ ]*[A-E][\)\ ]*', output)
-        if len(pred_answer) == 0:
-            pred_idx = 2
-        else:
+        try:
+            assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['video_path'], instruct + '\n' + output)
             pred_answer = pred_answer[0].strip()
-            # if pred_answer.startswith('('):
-            pred_answer = pred_answer.strip('()')
+            if pred_answer.startswith('('):
+                pred_answer = pred_answer.strip('()')
             pred_idx = letters.index(pred_answer)
+        except:
+            traceback.print_exc()
+            pred_idx = 2
+
         ans_file.write(f'{q_uid}, {pred_idx}\n')
 
 

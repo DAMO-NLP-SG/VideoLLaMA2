@@ -181,18 +181,19 @@ def build_videomme_eval(args, processor):
     return dataloader
 
 
-def videomme_dump(output):
+def videomme_dump(record, instruct, output):
     letters = ['A', 'B', 'C', 'D']
 
-    pred_answer = re.findall('[\(\ ]*([A-D])[\)\.\ ]*', output)
-    if len(pred_answer) == 0:
-        assert False
-        pred_idx = 2
-    else:
+    pred_answer = re.findall('[\(\ \[]*([A-D])[\)\.\ \]]*', output)
+    try:
+        assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(record['youtube_id'], instruct + '\n' + output)
         pred_answer = pred_answer[0].strip()
         pred_answer = pred_answer.strip('()')
         pred_idx = letters.index(pred_answer)
-    
+    except:
+        traceback.print_exc()
+        pred_idx = 2
+
     return letters[pred_idx]
 
 
@@ -238,11 +239,11 @@ def run_inference(args):
                 instruct += f"{op}\n"
             instruct += "The best answer is: "
             output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
-            new_record['questions'][idx]['response'] = videomme_dump(output)
+            new_record['questions'][idx]['response'] = videomme_dump(record, instruct, output)
 
             instruct = f"This video's subtitles are listed below:\n{subtitle}\n" + instruct
             output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
-            new_record_sub['questions'][idx]['response'] = videomme_dump(output)
+            new_record_sub['questions'][idx]['response'] = videomme_dump(record, instruct, output)
 
         ans_file.write(json.dumps(new_record) + ",\n")
         ans_sub_file.write(json.dumps(new_record_sub) + ",\n")

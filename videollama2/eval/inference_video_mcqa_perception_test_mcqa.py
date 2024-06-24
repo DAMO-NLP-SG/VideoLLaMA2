@@ -122,18 +122,19 @@ def run_inference(args):
             )
 
             pred_answer = re.findall('\(*[A-C]\)*', output)
-            if len(pred_answer) == 0:
+            try:
+                assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(video_id, instruct + '\n' + output)
+                pred_answer = pred_answer[0].strip()
+                if not pred_answer.startswith('('):
+                    pred_answer = f'({pred_answer})'
+                pred_idx = letters.index(pred_answer)
+            except:
                 tmp_options = [x.lower() for x in _options]
                 if output.lower() in tmp_options:
                     tmp_options = [x.lower() for x in _options]
                     pred_idx = tmp_options.index(output.lower())
                 else:
                     pred_idx = 2
-            else:
-                pred_answer = pred_answer[0].strip()
-                if not pred_answer.startswith('('):
-                    pred_answer = f'({pred_answer})'
-                pred_idx = letters.index(pred_answer)
 
             qas.append({'id': question_id, 'answer_id': pred_idx, 'answer': _options[pred_idx]})
 
