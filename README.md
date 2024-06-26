@@ -36,6 +36,7 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 
 
 ## 📰 News
+* **[2024.06.25]**  🔥🔥 As of Jun 25, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [MLVU Leaderboard](https://github.com/JUNJIE99/MLVU?tab=readme-ov-file#trophy-mini-leaderboard).
 * **[2024.06.18]**  🔥🔥 As of Jun 18, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [VideoMME Leaderboard](https://video-mme.github.io/home_page.html#leaderboard).
 * **[2024.06.17]**  👋👋 Update technical report with the latest results and the missing references. If you have works closely related to VideoLLaMA 2 but not mentioned in the paper, feel free to let us know.  
 * **[2024.06.14]**  🔥🔥 [Online Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2) is available.
