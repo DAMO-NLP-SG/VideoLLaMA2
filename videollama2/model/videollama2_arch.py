@@ -80,7 +80,10 @@ class Videollama2MetaModel:
         if pretrain_mm_mlp_adapter is not None:
             if os.path.exists(pretrain_mm_mlp_adapter):
                 is_local = True
-                mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
+                if os.path.isdir(pretrain_mm_mlp_adapter):
+                    mm_projector_weights = load_mm_projector(pretrain_mm_mlp_adapter)
+                else:
+                    mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
             else:
                 # Support loading projector weights from remote HuggingFace model hub
                 is_local = False
