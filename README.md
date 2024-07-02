@@ -57,7 +57,7 @@ Basic Dependencies:
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install -r requirements.txt
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 **[Offline Mode]** Install VideoLLaMA2 as a Python package (better for direct use):
