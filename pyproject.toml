@@ -18,7 +18,7 @@ dependencies = [
     "deepspeed==0.13.1", "accelerate==0.21.0",
     "peft==0.4.0", "timm==1.0.3", "numpy==1.24.4",
     "decord==0.6.0", "imageio==2.34.0", "imageio-ffmpeg==0.4.9",
-    "pytorchvideo==0.1.5", "moviepy==1.0.3", "scenedetect==0.6.3",
+    "moviepy==1.0.3", "scenedetect==0.6.3",
     "opencv-python==4.7.0.72",
     "scikit-learn==1.2.2", "huggingface_hub==0.22.2", "sentencepiece==0.1.99",
     "shortuuid", "einops==0.6.1", "einops-exts==0.0.4", 
