@@ -104,10 +104,12 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
             if 'vicuna' in model_base.lower():
                 model = Videollama2LlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
-            elif 'mixtral' in model_base.lower():
-                model = Videollama2MixtralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
             elif 'mistral' in model_base.lower():
                 model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
+            elif 'mixtral' in model_base.lower():
+                model = Videollama2MixtralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
+            elif 'qwen2' in model_base.lower():
+                model = Videollama2Qwen2ForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
 
             # NOTE; loading vision-language projector
             # * old codes for loading local mm_projector.bin
@@ -125,12 +127,15 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             if 'vicuna' in model_base.lower():
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
                 model = Videollama2LlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
-            elif 'mixtral' in model_base.lower():
-                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
-                model = Videollama2MixtralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             elif 'mistral' in model_base.lower():
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
                 model = Videollama2MistralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            elif 'mixtral' in model_base.lower():
+                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
+                model = Videollama2MixtralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            elif 'qwen2' in model_base.lower():
+                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
+                model = Videollama2Qwen2ForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             else:
                 # NOTE: mistral-based model is our default model.
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
