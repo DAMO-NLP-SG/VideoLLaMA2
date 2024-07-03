@@ -155,12 +155,14 @@ def generate(image, video, state, state_, textbox_in, temperature, top_p, max_ou
 
     text_en_in = textbox_in.replace("picture", "image")
 
+    num_frames = handler.model.config.num_frames if hasattr(handler.model.config, "num_frames") else NUM_FRAMES
+
     processor = handler.processor
     if os.path.exists(image) and not os.path.exists(video):
         tensor.append(process_image(image, processor).to(handler.model.device, dtype=dtype))
         modals.append('IMAGE')
     if not os.path.exists(image) and os.path.exists(video):
-        tensor.append(process_video(video, processor).to(handler.model.device, dtype=dtype))
+        tensor.append(process_video(video, processor, num_frames=num_frames, sample_scheme='fps').to(handler.model.device, dtype=dtype))
         modals.append('VIDEO')
     if os.path.exists(image) and os.path.exists(video):
         raise NotImplementedError("Not support image and video at the same time")
@@ -222,7 +224,7 @@ def clear_history(state, state_):
 # 3. The function can't return tensor or other cuda objects.
 
 conv_mode = "llama_2"
-model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
+model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-16F'
 
 device = torch.device("cuda")
 
