@@ -32,7 +32,6 @@ torchrun --nnodes $WORLD_SIZE \
     --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \
     --data_path   ${DATA_DIR}/videollava_sft/videochatgpt_llavaimage_tune.json \
     --data_folder ${DATA_DIR}/videollava_sft/ \
-    --freeze_backbone True \
     --pretrain_mm_mlp_adapter DAMO-NLP-SG/VideoLLaMA2-7B-Base/mm_projector.bin \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
