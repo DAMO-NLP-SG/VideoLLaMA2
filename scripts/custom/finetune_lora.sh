@@ -1,11 +1,23 @@
 #!/bin/bash
 
 # Environment Variables
-WORLD_SIZE=${1:-1}
-NPROC_PER_NODE=${2:-8}
-MASTER_ADDR="127.0.0.1"
-MASTER_PORT=16666
-RANK=0
+ARG_WORLD_SIZE=${1:-1}
+ARG_NPROC_PER_NODE=${2:-8}
+ARG_MASTER_ADDR="127.0.0.1"
+ARG_MASTER_PORT=16666
+ARG_RANK=0
+
+# Multiple conditions
+if [ ! -n "$WORLD_SIZE" ] || [ ! -n "$NPROC_PER_NODE" ]; then
+    WORLD_SIZE=$ARG_WORLD_SIZE
+    NPROC_PER_NODE=$ARG_NPROC_PER_NODE
+fi
+if [ ! -n "$MASTER_ADDR" ] || [ ! -n "$MASTER_PORT" ] || [ ! -n "$RANK" ]; then
+    MASTER_ADDR=$ARG_MASTER_ADDR
+    MASTER_PORT=$ARG_MASTER_PORT
+    RANK=$ARG_RANK
+fi
+
 
 # Training Arguments
 GLOBAL_BATCH_SIZE=128
