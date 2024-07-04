@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cu118
 # basic dependencies
-torch>=2.0.1
-torchvision>=0.15.2
+torch==2.0.1
+torchvision==0.15.2
 transformers==4.37.2
 tokenizers==0.15.1
 deepspeed==0.13.1
@@ -17,6 +17,7 @@ pytorchvideo==0.1.5
 moviepy==1.0.3
 scenedetect==0.6.3
 opencv-python==4.7.0.72
+pysubs2
 # misc
 scikit-learn==1.2.2
 huggingface_hub==0.22.2
@@ -31,6 +32,8 @@ gradio==3.50.0
 gradio_client==0.6.1
 httpx==0.24.1
 requests
+openai
 uvicorn
 fastapi
+tensorboard
 wandb
