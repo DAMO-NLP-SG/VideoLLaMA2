@@ -851,16 +851,6 @@ def train(attn_implementation=None):
     # select a Trainer
     trainer = VideoLLaMA2Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
 
-    # output_dir = './tmp'
-    # state_dict = get_peft_state_maybe_zero_3(trainer.model.named_parameters(), training_args.lora_bias)
-    # non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(trainer.model.named_parameters())
-    # # save for acquring `config.json`
-    # trainer.model.config.save_pretrained(output_dir)
-    # trainer.model.save_pretrained(output_dir, state_dict=state_dict)
-    # torch.save(non_lora_state_dict, os.path.join(output_dir, 'non_lora_trainables.bin'))
-    # print(model.config)
-    # exit(0)
-
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
     else:
