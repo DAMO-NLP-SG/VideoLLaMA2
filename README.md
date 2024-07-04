@@ -66,7 +66,7 @@ git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 ## 🚀 Main Results
