@@ -35,4 +35,5 @@ requests
 openai
 uvicorn
 fastapi
+tensorboard
 wandb

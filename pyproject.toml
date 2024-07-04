@@ -24,7 +24,7 @@ dependencies = [
     "shortuuid", "einops==0.6.1", "einops-exts==0.0.4", 
     "bitsandbytes==0.41.0", "pydantic>=2.0", "markdown2[all]", 
     "gradio==3.50.0", "gradio_client==0.6.1", "httpx==0.24.1",
-    "requests", "openai", "uvicorn", "fastapi", "wandb"
+    "requests", "openai", "uvicorn", "fastapi", "tensorboard", "wandb"
 ]
 
 [project.optional-dependencies]
