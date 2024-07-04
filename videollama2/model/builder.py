@@ -54,15 +54,25 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         kwargs['attn_implementation'] = 'flash_attention_2'
 
     if "videollama" in model_name.lower() or 'vlb' in model_name.lower():
-        # NOTE: lora model loading needs to appoint the base model
-        if 'lora' in model_name.lower() and model_base is None:
-            warnings.warn('There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged.')
         # NOTE: lora model loading
-        if 'lora' in model_name.lower() and model_base is not None:
+        if 'lora' in model_name.lower():
+            if model_base is None:
+                cfg_pretrained = PretrainedConfig.from_pretrained(model_path, token=token)
+                # NOTE: AutoConfig will modify `_name_or_path` property to `model_path` if `model_path` is not None.
+                # cfg_pretrained = AutoConfig.from_pretrained(model_path, token=token)
+                model_base = model_base if model_base is not None else cfg_pretrained._name_or_path
+
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False, token=token)
             print('Loading VideoLLaMA from base model...')
-            model = Videollama2LlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)
+
+            if 'vicuna' in model_base.lower():
+                model = Videollama2LlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)
+            elif 'mistral' in model_base.lower():
+                model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)
+            else:
+                model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)
+
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
             if model.lm_head.weight.shape[0] != token_num:
                 model.lm_head.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))
@@ -104,9 +114,13 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
             if 'vicuna' in model_base.lower():
                 model = Videollama2LlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
+            elif 'mistral' in model_base.lower():
+                model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
             elif 'mixtral' in model_base.lower():
                 model = Videollama2MixtralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
-            elif 'mistral' in model_base.lower():
+            elif 'qwen2' in model_base.lower():
+                model = Videollama2Qwen2ForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
+            else:
                 model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
 
             # NOTE; loading vision-language projector
@@ -125,12 +139,15 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             if 'vicuna' in model_base.lower():
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
                 model = Videollama2LlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
-            elif 'mixtral' in model_base.lower():
-                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
-                model = Videollama2MixtralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             elif 'mistral' in model_base.lower():
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
                 model = Videollama2MistralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            elif 'mixtral' in model_base.lower():
+                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
+                model = Videollama2MixtralForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            elif 'qwen2' in model_base.lower():
+                tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
+                model = Videollama2Qwen2ForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             else:
                 # NOTE: mistral-based model is our default model.
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=token)
