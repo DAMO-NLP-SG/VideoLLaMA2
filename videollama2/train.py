@@ -29,8 +29,6 @@ from typing import Dict, Optional, Sequence, List
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import Compose, Lambda, ToTensor
-from pytorchvideo.data.encoded_video import EncodedVideo
-from pytorchvideo.transforms import ApplyTransformToKey, ShortSideScale, UniformTemporalSubsample
 
 import cv2
 import decord
@@ -361,6 +359,99 @@ def preprocess_multimodal(sources: Sequence[str], data_args: DataArguments) -> D
     return sources
 
 
+def preprocess_qwen(
+    sources,
+    tokenizer: transformers.PreTrainedTokenizer,
+    MODAL_list = [],
+) -> Dict:
+    conv = conversation_lib.default_conversation.copy()
+    roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
+
+    # 1. Apply prompt templates
+    conversations = []
+    for i, source in enumerate(sources):
+        if roles[source[0]["from"]] != conv.roles[0]:
+            # Skip the first one if it is not from human
+            source = source[1:]
+
+        conv.messages = []
+        for j, sentence in enumerate(source):
+            role = roles[sentence["from"]]
+            assert role == conv.roles[j % 2], f"{i}"
+            conv.append_message(role, sentence["value"])
+        conversations.append(conv.get_prompt())
+
+    # 2. Tokenize conversations
+    if len(MODAL_list) > 0:
+        # input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
+        input_ids = torch.stack([tokenizer_MMODAL_token(prompt, tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[i]], return_tensors='pt') for i, prompt in enumerate(conversations)], dim=0)
+    else:
+        input_ids = tokenizer(
+            conversations,
+            return_tensors="pt",
+            padding="longest",
+            max_length=tokenizer.model_max_length,
+            truncation=True,
+        ).input_ids
+
+    targets = input_ids.clone()
+
+    assert conv.sep_style == conversation_lib.SeparatorStyle.QWEN
+
+    # 3. Prepare training inputs and labels.
+    for idx, (conversation, target) in enumerate(zip(conversations, targets)):
+        total_len = int(target.ne(tokenizer.pad_token_id).sum())
+
+        cur_len = 0
+        rounds = conversation.split(conv.sep)
+        # 3.1 Ignore system prompt (zero order round)
+        round_len = len(tokenizer(rounds[0]).input_ids) + 1
+        target[cur_len:cur_len+round_len] = IGNORE_INDEX
+        cur_len += round_len
+        rounds = rounds[1:]
+
+        # QA rounds
+        for i, rou in enumerate(rounds):
+            if rou == "" or rou == '\n':
+                break
+
+            role = conv.roles[i % 2]
+            parts = rou.split(role)
+
+            assert len(parts) == 2, f"Invalid conversation: {rou}"
+            parts[0] += role
+
+            if len(MODAL_list) > 0:
+                round_len = len(tokenizer_MMODAL_token(rou, tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[idx]])) + 1
+                instruction_len = len(tokenizer_MMODAL_token(parts[0], tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[idx]]))
+            else:
+                round_len = len(tokenizer(rou).input_ids) + 1
+                instruction_len = len(tokenizer(parts[0]).input_ids)
+
+            if i % 2 == 0:
+                # 3.2 Ignore role & instruction
+                target[cur_len:cur_len+round_len] = IGNORE_INDEX
+            else:
+                # 3.3 Ignore role & train response
+                target[cur_len:cur_len+instruction_len] = IGNORE_INDEX
+
+            cur_len += round_len
+
+        target[cur_len:] = IGNORE_INDEX
+
+    # TODO: Fixing this hardcoding for qwen/ChatML template
+    if "qwen" in conv.version:
+        for input_id, target in zip(input_ids, targets):
+            # <|im_start|>, <|im_end|>
+            target[input_id == 151644] = 151644
+            target[input_id == 151645] = 151645
+
+    return dict(
+        input_ids=input_ids,
+        labels=targets,
+    )
+
+
 def preprocess_llama_2(
     sources,
     tokenizer: transformers.PreTrainedTokenizer,
@@ -538,20 +629,69 @@ def preprocess_plain(
     tokenizer: transformers.PreTrainedTokenizer,
     MODAL_list=[]
 ) -> Dict:
-    # add end signal and concatenate together
+    conv = conversation_lib.default_conversation.copy()
+    roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
+    # NOTE: Supporting single modal now.
+    MODAL_TOKEN = DEFAULT_MMODAL_TOKEN[MODAL_list[0]]
+    MODAL_TOKEN_IDX = MMODAL_TOKEN_INDEX[MODAL_list[0]]
+
     conversations = []
-    DEFAULT_TOKEN = DEFAULT_MMODAL_TOKEN[MODAL_list[0]]
     for source in sources:
-        assert len(source) == 2
-        source[0]['value'] = DEFAULT_TOKEN
-        conversation = source[0]['value'] + source[1]['value'] + conversation_lib.default_conversation.sep
-        conversations.append(conversation)
+
+        conv.messages = []
+        # source is the conversations in the input data
+        for j, sentence in enumerate(source):
+            role = roles[sentence["from"]]
+            assert role == conv.roles[j % 2], f"{i}"
+            if j % 2 == 0:
+                sentence["value"] = MODAL_TOKEN
+            conv.append_message(role, sentence["value"])
+        conversations.append(conv.get_prompt())
+
     # tokenize conversations
-    input_ids = [tokenizer_MMODAL_token(prompt, tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[0]], return_tensors='pt') for prompt in conversations]
+    input_ids = [tokenizer_MMODAL_token(prompt, tokenizer, MODAL_TOKEN_IDX, return_tensors='pt') for prompt in conversations]
     targets = copy.deepcopy(input_ids)
-    for target, source in zip(targets, sources):
-        tokenized_len = len(tokenizer_MMODAL_token(source[0]['value'], tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[0]]))
-        target[:tokenized_len] = IGNORE_INDEX
+    for idx, (conversation, target) in enumerate(zip(conversations, targets)):
+        cur_len = 0
+        # NOTE: regular plain template
+        if conv.sep == "":
+            tokenized_len = len(tokenizer_MMODAL_token(MODAL_TOKEN, tokenizer, MODAL_TOKEN_IDX))
+            target[cur_len:cur_len+tokenized_len] = IGNORE_INDEX
+            continue
+
+        # NOTE: qwen/ChatML plain template
+        parts = conversation.split(conv.sep)
+        for idx, part in enumerate(parts):
+            if part == "":
+                break
+            if idx % 2 == 0:
+                tokenized_len = len(tokenizer_MMODAL_token(part, tokenizer, MODAL_TOKEN_IDX))
+                target[cur_len:cur_len+tokenized_len] = IGNORE_INDEX
+            if idx == 0:
+                cur_len += 1
+            cur_len += len(tokenizer_MMODAL_token(part, tokenizer, MODAL_TOKEN_IDX))
+
+    # TODO: Fixing this hardcoding for qwen/ChatML template
+    if "qwen" in conv.version:
+        for input_id, target in zip(input_ids, targets):
+            # <|im_start|>, <|im_end|>
+            target[input_id == 151644] = 151644
+            target[input_id == 151645] = 151645
+
+    # NOTE: old version plain preprocess
+    # conversations = []
+    # DEFAULT_TOKEN = DEFAULT_MMODAL_TOKEN[MODAL_list[0]]
+    # for source in sources:
+    #     source[0]['value'] = DEFAULT_TOKEN
+    #     conversation = source[0]['value'] + source[1]['value'] + conv_llava_plain.sep
+    #     conversations.append(conversation)
+
+    # tokenize conversations
+    # input_ids = [tokenizer_MMODAL_token(prompt, tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[0]], return_tensors='pt') for prompt in conversations]
+    # targets = copy.deepcopy(input_ids)
+    # for target, source in zip(targets, sources):
+    #     tokenized_len = len(tokenizer_MMODAL_token(source[0]['value'], tokenizer, MMODAL_TOKEN_INDEX[MODAL_list[0]]))
+    #     target[:tokenized_len] = IGNORE_INDEX
 
     return dict(input_ids=input_ids, labels=targets)
 
@@ -570,10 +710,15 @@ def preprocess(
     """
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.PLAIN:
         return preprocess_plain(sources, tokenizer, MODAL_list)
-    if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
-        return preprocess_llama_2(sources, tokenizer, MODAL_list)
+    # vicuna conversation style preprocess
     if conversation_lib.default_conversation.version.startswith("v1"):
         return preprocess_v1(sources, tokenizer, MODAL_list)
+    # llama2 conversation style preprocess
+    if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
+        return preprocess_llama_2(sources, tokenizer, MODAL_list)
+    # qwen2 conversation style preprocess
+    if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.QWEN:
+        return preprocess_qwen(sources, tokenizer, MODAL_list)
     # add end signal and concatenate together
     conversations = []
     for source in sources:
@@ -760,8 +905,10 @@ def train(attn_implementation=None):
         from transformers import BitsAndBytesConfig
         bnb_model_from_pretrained_args.update(dict(
             # device_map={"": training_args.device},
-            load_in_4bit=training_args.bits == 4,
-            load_in_8bit=training_args.bits == 8,
+            # BUG: High version transformers report error: 
+            # ValueError: You can't pass `load_in_4bit`or `load_in_8bit` as a kwarg when passing `quantization_config` argument at the same time
+            # load_in_4bit=training_args.bits == 4,
+            # load_in_8bit=training_args.bits == 8,
             quantization_config=BitsAndBytesConfig(
                 load_in_4bit=training_args.bits == 4,
                 load_in_8bit=training_args.bits == 8,
@@ -779,7 +926,18 @@ def train(attn_implementation=None):
     else:
         pretrain_model_name_or_path = model_args.model_name_or_path
     if model_args.vision_tower is not None:
-        if 'mistral' in model_args.model_name_or_path.lower():
+        if 'llama2' in model_args.model_name_or_path.lower():
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            config._attn_implementation = attn_implementation
+            model = Videollama2LlamaForCausalLM.from_pretrained(
+                pretrain_model_name_or_path,
+                config=config,
+                cache_dir=training_args.cache_dir,
+                torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
+                do_sample=True,
+                **bnb_model_from_pretrained_args
+            )
+        elif 'mistral' in model_args.model_name_or_path.lower():
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2MistralForCausalLM.from_pretrained(
@@ -803,10 +961,21 @@ def train(attn_implementation=None):
             )
             import deepspeed
             deepspeed.utils.set_z3_leaf_modules(model, [MixtralSparseMoeBlock])
+        elif 'qwen2' in model_args.model_name_or_path.lower():
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            config._attn_implementation = attn_implementation
+            model = Videollama2Qwen2ForCausalLM.from_pretrained(
+                pretrain_model_name_or_path,
+                config=config,
+                cache_dir=training_args.cache_dir,
+                torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
+                do_sample=True,
+                **bnb_model_from_pretrained_args
+            )
         else:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
-            model = Videollama2LlamaForCausalLM.from_pretrained(
+            model = Videollama2MistralForCausalLM.from_pretrained(
                 pretrain_model_name_or_path,
                 config=config,
                 cache_dir=training_args.cache_dir,
@@ -880,7 +1049,8 @@ def train(attn_implementation=None):
     elif model_args.version == "v0.5":
         tokenizer.pad_token = tokenizer.unk_token
     else:
-        tokenizer.pad_token = tokenizer.unk_token
+        if tokenizer.unk_token is not None: 
+            tokenizer.pad_token = tokenizer.unk_token
         if model_args.version in conversation_lib.conv_templates:
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
         else:
