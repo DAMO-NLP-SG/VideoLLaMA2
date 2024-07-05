@@ -3,7 +3,7 @@ from functools import partial
 
 import torch
 
-from .model import Videollama2LlamaForCausalLM, Videollama2MistralForCausalLM
+from .model import Videollama2LlamaForCausalLM, Videollama2MistralForCausalLM, Videollama2MixtralForCausalLM
 from .model.builder import load_pretrained_model
 from .conversation import conv_templates, SeparatorStyle
 from .mm_utils import process_video, tokenizer_MMODAL_token, get_model_name_from_path, KeywordsStoppingCriteria
@@ -14,6 +14,9 @@ def model_init(model_path=None):
     model_path = "DAMO-NLP-SG/VideoLLaMA2-7B" if model_path is None else model_path
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
+
+    if tokenizer.unk_token is not None: 
+        tokenizer.pad_token = tokenizer.unk_token
 
     num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
 
