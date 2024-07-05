@@ -59,5 +59,5 @@ torchrun --nnodes $WORLD_SIZE \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to wandb \
+    --report_to tensorboard \
     --run_name $RUN_NAME \
