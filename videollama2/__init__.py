@@ -15,12 +15,22 @@ def model_init(model_path=None):
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
 
+    if tokenizer.unk_token is not None: 
+        tokenizer.pad_token = tokenizer.unk_token
+
     num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
 
-    return model, partial(process_video, aspect_ratio=None, processor=processor, num_frames=num_frames), tokenizer
+    if 'vicuna' in model_name.lower():
+        version = 'v1'
+    elif 'qwen' in model_name.lower():
+        version = 'qwen'
+    else:
+        version = 'llama_2'
+
+    return model, partial(process_video, aspect_ratio=None, processor=processor, num_frames=num_frames), tokenizer, version
 
 
-def infer(model, video, instruct, tokenizer, do_sample=False):
+def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2'):
     """inference api of VideoLLaMA2 for video understanding.
 
     Args:
