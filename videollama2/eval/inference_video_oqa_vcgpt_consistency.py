@@ -75,7 +75,7 @@ def collate_fn(batch):
 
 def run_inference(args):
     # Initialize the model
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     questions = json.load(open(args.question_file, "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)

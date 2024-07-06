@@ -26,7 +26,7 @@ def get_chunk(lst, n, k):
 
 def run_inference(args):
     # Initialize the model
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     gt_questions = json.load(open(args.question_file, "r"))
     gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
@@ -68,6 +68,7 @@ def run_inference(args):
             model=model,
             tokenizer=tokenizer,
             do_sample=False,
+            version=version,
         )
 
         sample_set = {'id': qid, 'question': question, 'answer': answer, 'pred': output}

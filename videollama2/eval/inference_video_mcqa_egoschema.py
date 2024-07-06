@@ -4,6 +4,7 @@ import math
 import json
 import argparse
 import warnings
+import traceback
 
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
@@ -98,7 +99,7 @@ def egoschema_dump(ans_file, line, outputs):
 
 
 def run_inference(args):
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
@@ -117,7 +118,8 @@ def run_inference(args):
             mode='vanilla',
             model=model,
             tokenizer=tokenizer,
-            do_sample=False
+            do_sample=False,
+            version=version,
         )
 
         egoschema_dump(ans_file, line, [pred])

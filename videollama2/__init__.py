@@ -21,10 +21,13 @@ def model_init(model_path=None):
     num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
 
     if 'vicuna' in model_name.lower():
+        # vicuna
         version = 'v1'
     elif 'qwen' in model_name.lower():
+        # qwen1.5/qwen2
         version = 'qwen'
     else:
+        # mistral/mixtral/llama2
         version = 'llama_2'
 
     return model, partial(process_video, aspect_ratio=None, processor=processor, num_frames=num_frames), tokenizer, version
@@ -39,6 +42,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
         instruct (str): text instruction for understanding video.
         tokenizer: tokenizer.
         do_sample (bool): whether to sample.
+        version (str): conversation template version.
     Returns:
         str: response of the model.
     """
@@ -52,7 +56,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
     modal_index = MMODAL_TOKEN_INDEX["VIDEO"]
     instruct = modal_token + '\n' + instruct
 
-    conv = conv_templates["llama_2"].copy()
+    conv = conv_templates[version].copy()
     conv.append_message(conv.roles[0], instruct)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
@@ -61,7 +65,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
     attention_masks = input_ids.ne(tokenizer.pad_token_id).long().cuda()
 
     # 3. generate response according to visual signals and prompts. 
-    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE] else conv.sep2
+    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE, SeparatorStyle.QWEN] else conv.sep2
     # keywords = ["<s>", "</s>"]
     keywords = [stop_str]
     stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
@@ -85,13 +89,13 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
     return outputs
 
 
-def x_infer(video, question, model, tokenizer, mode='vanilla', do_sample=False):
+def x_infer(video, question, model, tokenizer, mode='vanilla', do_sample=False, version='llama_2'):
     if mode == 'mcqa':
         instruction = f'{question}\nAnswer with the option\'s letter from the given choices directly and only give the best option.'
-        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample)
+        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample, version=version)
     elif mode == 'openend':
         instruction = f'{question}\nAnswer the question using a single word or a short phrase with multiple words.'
-        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample)
+        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample, version=version)
     elif mode == 'vanilla':
         instruction = question
-        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample)
+        return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample, version=version)
