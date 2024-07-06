@@ -2,9 +2,9 @@ import os
 import re
 import math
 import json
-import traceback
 import argparse
 import warnings
+import traceback
 
 import torch
 import numpy as np
@@ -245,7 +245,7 @@ def mvbench_dump(ans_file, line, outputs):
 
 
 def run_inference(args):
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
 
@@ -266,7 +266,8 @@ def run_inference(args):
             mode='vanilla',
             model=model,
             tokenizer=tokenizer,
-            do_sample=False
+            do_sample=False,
+            version=version,
         )
 
         mvbench_dump(ans_file, line, [pred])

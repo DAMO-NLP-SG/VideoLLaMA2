@@ -199,7 +199,7 @@ def videomme_dump(record, instruct, output):
 
 def run_inference(args):
     # Initialize the model
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
     answer_sub_file = answer_file.replace('.json', '_sub.json')
@@ -238,11 +238,11 @@ def run_inference(args):
             for op_idx, op in enumerate(ops):
                 instruct += f"{op}\n"
             instruct += "The best answer is: "
-            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
+            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False, version=version)
             new_record['questions'][idx]['response'] = videomme_dump(record, instruct, output)
 
             instruct = f"This video's subtitles are listed below:\n{subtitle}\n" + instruct
-            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False)
+            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False, version=version)
             new_record_sub['questions'][idx]['response'] = videomme_dump(record, instruct, output)
 
         ans_file.write(json.dumps(new_record) + ",\n")

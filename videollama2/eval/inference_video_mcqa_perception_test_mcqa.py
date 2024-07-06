@@ -4,6 +4,7 @@ import math
 import json
 import argparse
 import warnings
+import traceback
 from tqdm import tqdm
 
 import torch
@@ -82,7 +83,7 @@ def collate_fn(batch):
 
 
 def run_inference(args):
-    model, processor, tokenizer = model_init(args.model_path)
+    model, processor, tokenizer, version = model_init(args.model_path)
 
     questions = json.load(open(args.question_file, "r"))
     questions = list(questions.values())
@@ -118,7 +119,8 @@ def run_inference(args):
                 mode='vanilla',
                 model=model,
                 tokenizer=tokenizer,
-                do_sample=False
+                do_sample=False,
+                version=version,
             )
 
             pred_answer = re.findall('\(*[A-C]\)*', output)
@@ -129,6 +131,7 @@ def run_inference(args):
                     pred_answer = f'({pred_answer})'
                 pred_idx = letters.index(pred_answer)
             except:
+                traceback.print_exc()
                 tmp_options = [x.lower() for x in _options]
                 if output.lower() in tmp_options:
                     tmp_options = [x.lower() for x in _options]
