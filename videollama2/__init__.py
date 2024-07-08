@@ -65,7 +65,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
     attention_masks = input_ids.ne(tokenizer.pad_token_id).long().cuda()
 
     # 3. generate response according to visual signals and prompts. 
-    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE, SeparatorStyle.QWEN] else conv.sep2
+    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE] else conv.sep2
     # keywords = ["<s>", "</s>"]
     keywords = [stop_str]
     stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
