@@ -18,8 +18,6 @@ if [ ! -n "$MASTER_ADDR" ] || [ ! -n "$MASTER_PORT" ] || [ ! -n "$RANK" ]; then
     RANK=$ARG_RANK
 fi
 
-echo "WORLD_SIZE: $WORLD_SIZE"
-echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 
 # Training Arguments
 GLOBAL_BATCH_SIZE=128
@@ -29,7 +27,7 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
 export WANDB_PROJECT=videollama2_vllava
-RUN_NAME=videollama2_vllava_lora
+RUN_NAME=videollama2_vllava_qlora
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 
@@ -39,8 +37,8 @@ torchrun --nnodes $WORLD_SIZE \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
-    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
-    --deepspeed scripts/zero3.json \
+    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 --bits 4 \
+    --deepspeed scripts/zero2.json \
     --version v1_mistral \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type stc_connector \

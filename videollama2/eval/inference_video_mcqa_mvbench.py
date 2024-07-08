@@ -234,8 +234,7 @@ def mvbench_dump(ans_file, line, outputs):
         try:
             assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['video_path'], instruct + '\n' + output)
             pred_answer = pred_answer[0].strip()
-            if pred_answer.startswith('('):
-                pred_answer = pred_answer.strip('()')
+            pred_answer = pred_answer.strip('()')
             pred_idx = letters.index(pred_answer)
         except:
             traceback.print_exc()
