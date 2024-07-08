@@ -27,7 +27,7 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
 export WANDB_PROJECT=videollama2_vllava
-RUN_NAME=videollama2_vllava_lora
+RUN_NAME=videollama2_vllava_qlora
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 
