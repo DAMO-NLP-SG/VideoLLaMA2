@@ -127,8 +127,9 @@ def run_inference(args):
             try:
                 assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(video_id, instruct + '\n' + output)
                 pred_answer = pred_answer[0].strip()
-                if not pred_answer.startswith('('):
-                    pred_answer = f'({pred_answer})'
+                # if not pred_answer.startswith('('):
+                pred_answer = pred_answer.strip('()')
+                pred_answer = f'({pred_answer})'
                 pred_idx = letters.index(pred_answer)
             except:
                 traceback.print_exc()
