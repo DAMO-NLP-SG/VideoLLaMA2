@@ -50,14 +50,15 @@ Basic Dependencies:
 * Python >= 3.8
 * Pytorch >= 2.0.1
 * CUDA Version >= 11.7
-* transformers >= 4.37.2
+* transformers >= 4.40.0 (for mistral tokenizer)
+* tokenizers >= 0.19.1 (for mistral tokenizer)
 
 **[Online Mode]** Install required packages (better for development):
 ```bash
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install -r requirements.txt
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 **[Offline Mode]** Install VideoLLaMA2 as a Python package (better for direct use):
@@ -66,7 +67,7 @@ git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 ## 🚀 Main Results
