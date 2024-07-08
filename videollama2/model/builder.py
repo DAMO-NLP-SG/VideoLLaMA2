@@ -54,8 +54,8 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         kwargs['attn_implementation'] = 'flash_attention_2'
 
     if "videollama" in model_name.lower() or 'vlb' in model_name.lower():
-        # NOTE: lora model loading
-        if 'lora' in model_name.lower():
+        # NOTE: lora/qlora model loading
+        if 'lora' in model_name.lower() or 'qlora' in model_name.lower():
             if model_base is None:
                 cfg_pretrained = PretrainedConfig.from_pretrained(model_path, token=token)
                 # NOTE: AutoConfig will modify `_name_or_path` property to `model_path` if `model_path` is not None.
@@ -63,6 +63,9 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                 model_base = model_base if model_base is not None else cfg_pretrained._name_or_path
 
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
+            # NOTE: remove qlora training quantization config 
+            if hasattr(lora_cfg_pretrained, 'quantization_config'):
+                del lora_cfg_pretrained.quantization_config
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False, token=token)
             print('Loading VideoLLaMA from base model...')
 
