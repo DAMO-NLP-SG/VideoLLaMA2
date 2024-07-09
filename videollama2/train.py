@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, List
 
 # torch-related packages
+# NOTE: torch must be imported before transformers. Otherwise, `Segmentation fault (core dumped)` will occur.
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import Compose, Lambda, ToTensor
@@ -835,7 +836,7 @@ def train(attn_implementation=None):
     else:
         pretrain_model_name_or_path = model_args.model_name_or_path
     if model_args.vision_tower is not None:
-        if 'llama2' in model_args.model_name_or_path.lower():
+        if 'vicuna' in model_args.model_name_or_path.lower():
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config._attn_implementation = attn_implementation
             model = Videollama2LlamaForCausalLM.from_pretrained(
