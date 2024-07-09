@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, List
 
 # torch-related packages
+# NOTE: torch must be imported before transformers. Otherwise, `Segmentation fault (core dumped)` will occur.
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import Compose, Lambda, ToTensor
