@@ -226,6 +226,7 @@ def build_mvbench_eval(args, processor, num_frames):
 def mvbench_dump(ans_file, line, outputs):
     for idx, output in enumerate(outputs):
         vid = line['video_path'][idx]
+        instruct = line['instruct'][idx]
         task_type = line['task_type'][idx]
         letters = line['letters'][idx].split(',')
         answer_idx = line['answer_idx'][idx].item()

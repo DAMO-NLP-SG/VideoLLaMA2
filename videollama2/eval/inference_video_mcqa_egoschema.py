@@ -82,6 +82,7 @@ def build_egoschema_eval(args, processor):
 def egoschema_dump(ans_file, line, outputs):
     for idx, output in enumerate(outputs):
         q_uid = line['q_uid'][idx]
+        instruct = line['instruct'][idx]
         letters = ['A', 'B', 'C', 'D', 'E']
 
         pred_answer = re.findall('[\(\ ]*[A-E][\)\ ]*', output)
