@@ -351,9 +351,10 @@ class VideoLLaMA2Trainer(Trainer):
 
                 run_dir = self._get_output_dir(trial=trial)
                 output_dir = os.path.join(run_dir, checkpoint_folder)
+
+                state_dict = get_peft_state_maybe_zero_3(self.model.named_parameters(), self.args.lora_bias)
+                non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(self.model.named_parameters())
                 if self.args.local_rank == 0 or self.args.local_rank == -1:
-                    state_dict = get_peft_state_maybe_zero_3(self.model.named_parameters(), self.args.lora_bias)
-                    non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(self.model.named_parameters())
                     # save for acquring `config.json`
                     self.model.config.save_pretrained(output_dir)
                     # save for acquring `adapter_config.json`, `adapter_model.bin`
