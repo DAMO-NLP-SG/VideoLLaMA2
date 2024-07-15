@@ -2,7 +2,7 @@
 # basic dependencies
 torch==2.1.0
 torchvision==0.16.0
-transformers==4.40.0
+transformers==4.41.2
 tokenizers==0.19.1
 deepspeed==0.13.1
 accelerate==0.26.1
@@ -19,7 +19,7 @@ opencv-python==4.7.0.72
 pysubs2
 # misc
 scikit-learn==1.2.2
-huggingface_hub==0.22.2
+huggingface_hub==0.23.4
 sentencepiece==0.1.99
 shortuuid
 einops==0.6.1

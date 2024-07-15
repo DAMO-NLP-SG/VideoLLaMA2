@@ -50,7 +50,7 @@ Basic Dependencies:
 * Python >= 3.10
 * Pytorch >= 2.1.0
 * CUDA Version >= 11.8
-* transformers >= 4.40.0 (for mistral tokenizer)
+* transformers >= 4.41.2 (for mistral tokenizer)
 * tokenizers >= 0.19.1 (for mistral tokenizer)
 
 **[Online Mode]** Install required packages (better for development):
