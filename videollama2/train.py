@@ -52,6 +52,9 @@ from videollama2.videollama2_trainer import (
     find_all_linear_names, safe_save_model_for_hf_trainer
 )
 
+# NOTE: fast tokenizer warning issue: https://github.com/huggingface/transformers/issues/5486   
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 local_rank = None
 
 
