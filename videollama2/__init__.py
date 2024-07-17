@@ -28,12 +28,12 @@ def model_init(model_path=None):
         version = 'qwen'
     else:
         # mistral/mixtral/llama2
-        version = 'llama_2'
+        version = 'llama2'
 
     return model, partial(process_video, aspect_ratio=None, processor=processor, num_frames=num_frames), tokenizer, version
 
 
-def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2'):
+def infer(model, video, instruct, tokenizer, do_sample=False, version='llama2'):
     """inference api of VideoLLaMA2 for video understanding.
 
     Args:
@@ -89,7 +89,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama_2')
     return outputs
 
 
-def x_infer(video, question, model, tokenizer, mode='vanilla', do_sample=False, version='llama_2'):
+def x_infer(video, question, model, tokenizer, mode='vanilla', do_sample=False, version='llama2'):
     if mode == 'mcqa':
         instruction = f'{question}\nAnswer with the option\'s letter from the given choices directly and only give the best option.'
         return infer(model=model, tokenizer=tokenizer, video=video, instruct=instruction, do_sample=do_sample, version=version)

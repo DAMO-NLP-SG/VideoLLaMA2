@@ -40,7 +40,7 @@ torchrun --nnodes $WORLD_SIZE \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
     --deepspeed scripts/zero3.json \
-    --version v1_mistral \
+    --version mistral \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type stp_connector \
     --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \

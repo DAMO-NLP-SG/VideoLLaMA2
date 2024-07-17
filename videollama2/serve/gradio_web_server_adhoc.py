@@ -223,7 +223,7 @@ def clear_history(state, state_):
 # 2. The operation or tensor which requires cuda are limited in those functions wrapped via spaces.GPU
 # 3. The function can't return tensor or other cuda objects.
 
-conv_mode = "llama_2"
+conv_mode = "llama2"
 model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-16F'
 
 device = torch.device("cuda")

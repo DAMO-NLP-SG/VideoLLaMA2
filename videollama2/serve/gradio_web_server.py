@@ -230,7 +230,7 @@ def http_bot(state, model_selector, temperature, top_p, max_new_tokens, request:
         # First round of conversation
         if "llava" in model_name.lower():
             if 'llama-2' in model_name.lower():
-                template_name = "llava_llama_2"
+                template_name = "llava_llama2"
             elif "v1" in model_name.lower():
                 if 'mmtag' in model_name.lower():
                     template_name = "v1_mmtag"
@@ -238,8 +238,6 @@ def http_bot(state, model_selector, temperature, top_p, max_new_tokens, request:
                     template_name = "v1_mmtag"
                 else:
                     template_name = "llava_v1"
-            elif "mpt" in model_name.lower():
-                template_name = "mpt"
             else:
                 if 'mmtag' in model_name.lower():
                     template_name = "v0_mmtag"
@@ -247,10 +245,8 @@ def http_bot(state, model_selector, temperature, top_p, max_new_tokens, request:
                     template_name = "v0_mmtag"
                 else:
                     template_name = "llava_v0"
-        elif "mpt" in model_name:
-            template_name = "mpt_text"
         elif "llama-2" in model_name:
-            template_name = "llama_2"
+            template_name = "llama2"
         else:
             template_name = "vicuna_v1"
         template_name = "llava_v1"
@@ -297,7 +293,7 @@ def http_bot(state, model_selector, temperature, top_p, max_new_tokens, request:
         "temperature": float(temperature),
         "top_p": float(top_p),
         "max_new_tokens": min(int(max_new_tokens), 1536),
-        "stop": state.sep if state.sep_style in [SeparatorStyle.SINGLE, SeparatorStyle.MPT] else state.sep2,
+        "stop": state.sep if state.sep_style in [SeparatorStyle.SINGLE] else state.sep2,
         #"images": f'List of {len(state.get_images())} images: {all_image_hash}',
         "images": f'List of {len(all_image_hash)} images: {all_image_hash}',
     }

@@ -47,15 +47,13 @@ def main(args):
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name, args.load_8bit, args.load_4bit, device=args.device)
 
     # if "llama-2" in model_name.lower():
-    #     conv_mode = "llava_llama_2"
+    #     conv_mode = "llava_llama2"
     # elif "mistral" in model_name.lower():
-    #     conv_mode = "mistral_instruct"
+    #     conv_mode = "mistral"
     # elif "v1.6-34b" in model_name.lower():
     #     conv_mode = "chatml_direct"
     # elif "v1" in model_name.lower():
     #     conv_mode = "llava_v1"
-    # elif "mpt" in model_name.lower():
-    #     conv_mode = "mpt"
     # else:
     #     conv_mode = "llava_v0"
     conv_mode = "llava_v1" # fix conversation mode for now
@@ -66,10 +64,7 @@ def main(args):
         args.conv_mode = conv_mode
 
     conv = conv_templates[args.conv_mode].copy()
-    if "mpt" in model_name.lower():
-        roles = ('user', 'assistant')
-    else:
-        roles = conv.roles
+    roles = conv.roles
 
     image = load_image(args.image_file)
     image_size = image.size

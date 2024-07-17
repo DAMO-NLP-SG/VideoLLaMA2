@@ -12,9 +12,8 @@ class SeparatorStyle(Enum):
     """Different separator style."""
     SINGLE = auto()
     TWO = auto()
-    MPT = auto()
     PLAIN = auto()
-    LLAMA_2 = auto()
+    LLAMA2 = auto()
 
 
 @dataclasses.dataclass
@@ -65,16 +64,7 @@ class Conversation:
                     ret += role + ": " + message + seps[i % 2]
                 else:
                     ret += role + ":"
-        elif self.sep_style == SeparatorStyle.MPT:
-            ret = self.system + self.sep
-            for role, message in messages:
-                if message:
-                    if type(message) is tuple:
-                        message, _, _ = message
-                    ret += role + message + self.sep
-                else:
-                    ret += role
-        elif self.sep_style == SeparatorStyle.LLAMA_2:
+        elif self.sep_style == SeparatorStyle.LLAMA2:
             wrap_sys = lambda msg: f"<<SYS>>\n{msg}\n<</SYS>>\n\n"
             wrap_inst = lambda msg: f"[INST] {msg} [/INST]"
             ret = ""
@@ -308,17 +298,7 @@ class Conversation:
             "sep2": self.sep2,
         }
 
-conv_mistral_instruct = Conversation(
-    system="A chat between a curious user and an artificial intelligence assistant. "
-    "The assistant gives helpful, detailed, and polite answers to the user's questions.",
-    roles=("USER", "ASSISTANT"),
-    version="llama_v2",
-    messages=(),
-    offset=0,
-    sep_style=SeparatorStyle.LLAMA_2,
-    sep="",
-    sep2="</s>",
-)
+
 conv_vicuna_v0 = Conversation(
     system="A chat between a curious human and an artificial intelligence assistant. "
            "The assistant gives helpful, detailed, and polite answers to the human's questions.",
@@ -350,55 +330,6 @@ conv_vicuna_v0 = Conversation(
     sep="###",
 )
 
-conv_vicuna_v1 = Conversation(
-    system="A chat between a curious user and an artificial intelligence assistant. "
-    "The assistant gives helpful, detailed, and polite answers to the user's questions.",
-    roles=("USER", "ASSISTANT"),
-    version="v1",
-    messages=(),
-    offset=0,
-    sep_style=SeparatorStyle.TWO,
-    sep=" ",
-    sep2="</s>",
-)
-
-conv_llama_2 = Conversation(
-    system="""You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
-
-If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.""",
-    roles=("USER", "ASSISTANT"),
-    version="llama_v2",
-    messages=(),
-    offset=0,
-    sep_style=SeparatorStyle.LLAMA_2,
-    sep="<s>",
-    sep2="</s>",
-)
-
-conv_llava_llama_2 = Conversation(
-    system="You are a helpful language and vision assistant. "
-           "You are able to understand the visual content that the user provides, "
-           "and assist the user with a variety of tasks using natural language.",
-    roles=("USER", "ASSISTANT"),
-    version="llama_v2",
-    messages=(),
-    offset=0,
-    sep_style=SeparatorStyle.LLAMA_2,
-    sep="<s>",
-    sep2="</s>",
-)
-
-conv_mpt = Conversation(
-    system="""<|im_start|>system
-A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.""",
-    roles=("<|im_start|>user\n", "<|im_start|>assistant\n"),
-    version="mpt",
-    messages=(),
-    offset=0,
-    sep_style=SeparatorStyle.MPT,
-    sep="<|im_end|>",
-)
-
 conv_llava_plain = Conversation(
     system="",
     roles=("", ""),
@@ -407,17 +338,6 @@ conv_llava_plain = Conversation(
     offset=0,
     sep_style=SeparatorStyle.PLAIN,
     sep="\n",
-)
-
-conv_llava_v0 = Conversation(
-    system="A chat between a curious human and an artificial intelligence assistant. "
-           "The assistant gives helpful, detailed, and polite answers to the human's questions.",
-    roles=("Human", "Assistant"),
-    messages=(
-    ),
-    offset=0,
-    sep_style=SeparatorStyle.SINGLE,
-    sep="###",
 )
 
 conv_llava_v0_mmtag = Conversation(
@@ -433,9 +353,20 @@ conv_llava_v0_mmtag = Conversation(
     version="v0_mmtag",
 )
 
-conv_llava_v1 = Conversation(
+conv_llava_v0 = Conversation(
     system="A chat between a curious human and an artificial intelligence assistant. "
            "The assistant gives helpful, detailed, and polite answers to the human's questions.",
+    roles=("Human", "Assistant"),
+    messages=(
+    ),
+    offset=0,
+    sep_style=SeparatorStyle.SINGLE,
+    sep="###",
+)
+
+conv_vicuna_v1 = Conversation(
+    system="A chat between a curious user and an artificial intelligence assistant. "
+    "The assistant gives helpful, detailed, and polite answers to the user's questions.",
     roles=("USER", "ASSISTANT"),
     version="v1",
     messages=(),
@@ -458,25 +389,77 @@ conv_llava_v1_mmtag = Conversation(
     version="v1_mmtag",
 )
 
-default_conversation = conv_vicuna_v1
+conv_llava_v1 = Conversation(
+    system="A chat between a curious human and an artificial intelligence assistant. "
+           "The assistant gives helpful, detailed, and polite answers to the human's questions.",
+    roles=("USER", "ASSISTANT"),
+    version="v1",
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.TWO,
+    sep=" ",
+    sep2="</s>",
+)
+
+conv_llava_llama2 = Conversation(
+    system="You are a helpful language and vision assistant. "
+           "You are able to understand the visual content that the user provides, "
+           "and assist the user with a variety of tasks using natural language.",
+    roles=("USER", "ASSISTANT"),
+    version="llama2",
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.LLAMA2,
+    sep="<s>",
+    sep2="</s>",
+)
+
+conv_llama2 = Conversation(
+    system="""You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
+
+If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.""",
+    roles=("USER", "ASSISTANT"),
+    version="llama2",
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.LLAMA2,
+    sep="<s>",
+    sep2="</s>",
+)
+
+conv_mistral = Conversation(
+    system="A chat between a curious user and an artificial intelligence assistant. "
+    "The assistant gives helpful, detailed, and polite answers to the user's questions.",
+    roles=("USER", "ASSISTANT"),
+    version="llama2",
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.LLAMA2,
+    sep="",
+    sep2="</s>",
+)
+
+default_conversation = conv_mistral
 conv_templates = {
     "default": conv_vicuna_v0,
-    "v0": conv_vicuna_v0,
-    "v1": conv_vicuna_v1,
-    "vicuna_v1": conv_vicuna_v1,
-    "llama_2": conv_llama_2,
-
+    # pretrain template
     "plain": conv_llava_plain,
+    # llava v0
+    "v0": conv_vicuna_v0,
     "v0_plain": conv_llava_plain,
-    "llava_v0": conv_llava_v0,
     "v0_mmtag": conv_llava_v0_mmtag,
-    "llava_v1": conv_llava_v1,
+    "llava_v0": conv_llava_v0,
+    # llava v1
+    "v1": conv_vicuna_v1,
     "v1_mmtag": conv_llava_v1_mmtag,
-    "llava_llama_2": conv_llava_llama_2,
-
-    "video_llama_beta": conv_llava_llama_2,
-    "mistral_instruct": conv_mistral_instruct,
-    "mpt": conv_mpt,
+    "llava_v1": conv_llava_v1,
+    "vicuna_v1": conv_vicuna_v1,
+    # llava v1.5
+    "llava_llama2": conv_llava_llama2,
+    # llama2
+    "llama2": conv_llama2,
+    # mistral
+    "mistral": conv_mistral,
 }
 
 
