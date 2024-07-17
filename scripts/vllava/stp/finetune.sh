@@ -1,17 +1,30 @@
 #!/bin/bash
 
 # Environment Variables
-WORLD_SIZE=1
-NPROC_PER_NODE=8
-MASTER_ADDR="127.0.0.1"
-MASTER_PORT=16666
-RANK=0
+ARG_WORLD_SIZE=${1:-1}
+ARG_NPROC_PER_NODE=${2:-8}
+ARG_MASTER_ADDR="127.0.0.1"
+ARG_MASTER_PORT=16666
+ARG_RANK=0
+
+# Multiple conditions
+if [ ! -n "$WORLD_SIZE" ] || [ ! -n "$NPROC_PER_NODE" ]; then
+    WORLD_SIZE=$ARG_WORLD_SIZE
+    NPROC_PER_NODE=$ARG_NPROC_PER_NODE
+fi
+if [ ! -n "$MASTER_ADDR" ] || [ ! -n "$MASTER_PORT" ] || [ ! -n "$RANK" ]; then
+    MASTER_ADDR=$ARG_MASTER_ADDR
+    MASTER_PORT=$ARG_MASTER_PORT
+    RANK=$ARG_RANK
+fi
+
+echo "WORLD_SIZE: $WORLD_SIZE"
+echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 
 # Training Arguments
 GLOBAL_BATCH_SIZE=128
-GRADIENT_ACCUMULATION_STEPS=2
-LOCAL_BATCH_SIZE=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$GRADIENT_ACCUMULATION_STEPS)]
-echo $LOCAL_BATCH_SIZE
+LOCAL_BATCH_SIZE=4
+GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$LOCAL_BATCH_SIZE)]
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
@@ -27,7 +40,7 @@ torchrun --nnodes $WORLD_SIZE \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
     --deepspeed scripts/zero3.json \
-    --version v1_mistral \
+    --version mistral \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type stp_connector \
     --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \
@@ -59,5 +72,5 @@ torchrun --nnodes $WORLD_SIZE \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --report_to wandb \
+    --report_to tensorboard \
     --run_name $RUN_NAME \

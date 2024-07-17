@@ -24,8 +24,7 @@ if [ ! -f "$output_file" ]; then
             --question-file ${EVAL_DATA_DIR}/videochatgpt_gen/generic_qa.json \
             --answer-file ${OUTPUT_DIR}/videochatgpt_gen/answers/detail/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
             --num-chunks $CHUNKS \
-            --chunk-idx $IDX \
-            --conv-mode llama_2 &
+            --chunk-idx $IDX &
     done
 
     wait
