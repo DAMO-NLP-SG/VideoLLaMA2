@@ -3,7 +3,7 @@ from functools import partial
 
 import torch
 
-from .model import Videollama2LlamaForCausalLM, Videollama2MistralForCausalLM, Videollama2MixtralForCausalLM
+from .model import Videollama2LlamaForCausalLM, Videollama2MistralForCausalLM, Videollama2MixtralForCausalLM, Videollama2Qwen2ForCausalLM
 from .model.builder import load_pretrained_model
 from .conversation import conv_templates, SeparatorStyle
 from .mm_utils import process_video, tokenizer_MMODAL_token, get_model_name_from_path, KeywordsStoppingCriteria
@@ -65,7 +65,7 @@ def infer(model, video, instruct, tokenizer, do_sample=False, version='llama2'):
     attention_masks = input_ids.ne(tokenizer.pad_token_id).long().cuda()
 
     # 3. generate response according to visual signals and prompts. 
-    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE] else conv.sep2
+    stop_str = conv.sep if conv.sep_style in [SeparatorStyle.SINGLE, SeparatorStyle.QWEN] else conv.sep2
     # keywords = ["<s>", "</s>"]
     keywords = [stop_str]
     stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)

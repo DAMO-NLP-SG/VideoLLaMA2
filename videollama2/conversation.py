@@ -14,7 +14,7 @@ class SeparatorStyle(Enum):
     TWO = auto()
     PLAIN = auto()
     LLAMA2 = auto()
-
+    QWEN = auto()
 
 @dataclasses.dataclass
 class Conversation:
@@ -85,6 +85,23 @@ class Conversation:
                 else:
                     ret += ""
             ret = ret.lstrip(self.sep)
+        elif self.sep_style == SeparatorStyle.QWEN:
+            ret = ""
+            # 1. Add system prompt
+            ret += self.system + self.sep + "\n"
+            # 2. Iterate message
+            for i, (role, message) in enumerate(messages):
+                if i == 0:
+                    assert message, "first message should not be none"
+                    assert role == self.roles[0], "first message should come from user"
+                if message:
+                    if type(message) is tuple:
+                        message, _, _ = message
+                    # 2.1 Add role and message
+                    ret += role + message + self.sep + "\n"
+                else:
+                    # 2.2 Add generation prompt
+                    ret += role
         elif self.sep_style == SeparatorStyle.PLAIN:
             seps = [self.sep, self.sep2]
             ret = self.system
@@ -92,9 +109,9 @@ class Conversation:
                 if message:
                     if type(message) is tuple:
                         message, _, _ = message
-                    ret += message + seps[i % 2]
+                    ret += role + message + seps[i % 2]
                 else:
-                    ret += ""
+                    ret += role
         else:
             raise ValueError(f"Invalid style: {self.sep_style}")
 
@@ -102,7 +119,6 @@ class Conversation:
 
     def append_message(self, role, message):
         self.messages.append([role, message])
-
 
     def process_image(self, image, image_process_mode, return_pil=False, image_format='PNG', max_len=800, min_len=400):
         if image_process_mode == "Pad":
@@ -333,11 +349,11 @@ conv_vicuna_v0 = Conversation(
 conv_llava_plain = Conversation(
     system="",
     roles=("", ""),
-    messages=(
-    ),
+    messages=(),
     offset=0,
     sep_style=SeparatorStyle.PLAIN,
-    sep="\n",
+    sep="",
+    sep2="\n"
 )
 
 conv_llava_v0_mmtag = Conversation(
@@ -439,6 +455,27 @@ conv_mistral = Conversation(
     sep2="</s>",
 )
 
+conv_qwen = Conversation(
+    system="<|im_start|>system\nYou are a helpful assistant.",
+    roles=("<|im_start|>user\n", "<|im_start|>assistant\n"),
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.QWEN,
+    sep="<|im_end|>",
+    version="qwen",
+)
+
+conv_qwen_plain = Conversation(
+    system="",
+    roles=("<|im_start|>user\n", "<|im_start|>assistant\n"),
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.PLAIN,
+    sep="<|im_end|>",
+    sep2="<|im_end|>",
+    version="qwen_plain",
+)
+
 default_conversation = conv_mistral
 conv_templates = {
     "default": conv_vicuna_v0,
@@ -460,6 +497,9 @@ conv_templates = {
     "llama2": conv_llama2,
     # mistral
     "mistral": conv_mistral,
+    # qwen
+    "qwen": conv_qwen,
+    "qwen_plain": conv_qwen_plain,
 }
 
 
