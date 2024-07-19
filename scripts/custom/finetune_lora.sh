@@ -41,7 +41,7 @@ torchrun --nnodes $WORLD_SIZE \
     videollama2/train_flash_attn.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed scripts/zero3.json \
-    --version v1_mistral \
+    --version mistral \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type stc_connector \
     --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \

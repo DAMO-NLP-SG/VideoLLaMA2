@@ -364,7 +364,7 @@ def preprocess_qwen(
     )
 
 
-def preprocess_llama_2(
+def preprocess_llama2(
     sources,
     tokenizer: transformers.PreTrainedTokenizer,
     MODAL_list = [],
@@ -401,7 +401,7 @@ def preprocess_llama_2(
 
     targets = input_ids.clone()
 
-    assert conv.sep_style == conversation_lib.SeparatorStyle.LLAMA_2
+    assert conv.sep_style == conversation_lib.SeparatorStyle.LLAMA2
 
     # Mask targets
     sep = "[/INST] "
@@ -622,7 +622,8 @@ def preprocess(
     """
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.PLAIN:
         return preprocess_plain(sources, tokenizer, MODAL_list)
-    # vicuna conversation style preprocess
+    if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA2:
+        return preprocess_llama2(sources, tokenizer, MODAL_list)
     if conversation_lib.default_conversation.version.startswith("v1"):
         return preprocess_v1(sources, tokenizer, MODAL_list)
     # llama2 conversation style preprocess
@@ -969,8 +970,8 @@ def train(attn_implementation=None):
         else:
             if model_args.version == "v1":
                 conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
-            elif model_args.version == "v1_mistral":
-                conversation_lib.default_conversation = conversation_lib.conv_templates["mistral_instruct"]
+            elif model_args.version == "mistral":
+                conversation_lib.default_conversation = conversation_lib.conv_templates["mistral"]
 
     if model_args.vision_tower is not None:
         # initialize vision encoder + multi-modal projector

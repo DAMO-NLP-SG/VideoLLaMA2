@@ -289,7 +289,7 @@ def inference():
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
     model = model.to('cuda:0')
-    conv_mode = 'llama_2'
+    conv_mode = 'llama2'
 
     # 2. Visual preprocess (load & transform image or video).
     if modal_list[0] == 'video':
