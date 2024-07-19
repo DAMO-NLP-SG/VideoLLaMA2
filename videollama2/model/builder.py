@@ -124,6 +124,8 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                 model = Videollama2MixtralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
             elif 'qwen2' in model_base.lower():
                 model = Videollama2Qwen2ForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
+            else:
+                model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
 
             # NOTE; loading vision-language projector
             # * old codes for loading local mm_projector.bin
