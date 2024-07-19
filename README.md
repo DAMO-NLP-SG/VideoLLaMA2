@@ -47,8 +47,8 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 
 ## 🛠️ Requirements and Installation
 Basic Dependencies:
-* Python >= 3.10
-* Pytorch >= 2.1.0
+* Python >= 3.8
+* Pytorch >= 2.2.0
 * CUDA Version >= 11.8
 * transformers >= 4.41.2 (for mistral tokenizer)
 * tokenizers >= 0.19.1 (for mistral tokenizer)
@@ -58,7 +58,7 @@ Basic Dependencies:
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install -r requirements.txt
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 **[Offline Mode]** Install VideoLLaMA2 as a Python package (better for direct use):
@@ -67,7 +67,7 @@ git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
-pip install flash-attn --no-build-isolation
+pip install flash-attn==2.5.8 --no-build-isolation
 ```
 
 ## 🚀 Main Results
