@@ -72,5 +72,5 @@ torchrun --nnodes $WORLD_SIZE \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --report_to wandb \
+    --report_to tensorboard \
     --run_name $RUN_NAME \
