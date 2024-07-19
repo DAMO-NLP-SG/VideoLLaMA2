@@ -15,7 +15,7 @@ imageio==2.34.0
 imageio-ffmpeg==0.4.9
 moviepy==1.0.3
 scenedetect==0.6.3
-opencv-python==4.6.0.66
+opencv-python==4.7.0.72
 pysubs2
 # misc
 scikit-learn==1.2.2
