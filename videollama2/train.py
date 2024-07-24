@@ -622,13 +622,11 @@ def preprocess(
     """
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.PLAIN:
         return preprocess_plain(sources, tokenizer, MODAL_list)
+    # llama2/mistral conversation style preprocess
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA2:
         return preprocess_llama2(sources, tokenizer, MODAL_list)
     if conversation_lib.default_conversation.version.startswith("v1"):
         return preprocess_v1(sources, tokenizer, MODAL_list)
-    # llama2 conversation style preprocess
-    if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
-        return preprocess_llama_2(sources, tokenizer, MODAL_list)
     # qwen2 conversation style preprocess
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.QWEN:
         return preprocess_qwen(sources, tokenizer, MODAL_list)
