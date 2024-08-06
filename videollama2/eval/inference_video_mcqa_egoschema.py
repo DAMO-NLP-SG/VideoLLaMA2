@@ -11,7 +11,8 @@ from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -85,6 +86,8 @@ def egoschema_dump(ans_file, line, outputs):
         instruct = line['instruct'][idx]
         letters = ['A', 'B', 'C', 'D', 'E']
 
+        output = output.replace('answer', '')
+        output = output.replace('Answer', '')
         pred_answer = re.findall('[\(\ ]*[A-E][\)\ ]*', output)
         try:
             assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['q_uid'], instruct + '\n' + output)
@@ -99,27 +102,28 @@ def egoschema_dump(ans_file, line, outputs):
 
 
 def run_inference(args):
-    model, processor, tokenizer, version = model_init(args.model_path)
+    disable_torch_init()
+
+    model, processor, tokenizer = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
     ans_file = open(answer_file, "w")
 
-    val_loader = build_egoschema_eval(args, processor)
+    val_loader = build_egoschema_eval(args, processor['video'])
 
     # Iterate over each sample in the ground truth file
     for i, line in enumerate(tqdm(val_loader)):
         video_tensor = line['video'][0]
         instruct = line['instruct'][0]
 
-        pred = x_infer(
+        pred = mm_infer(
             video_tensor,
             instruct,
-            mode='vanilla',
             model=model,
             tokenizer=tokenizer,
+            modal='video',
             do_sample=False,
-            version=version,
         )
 
         egoschema_dump(ans_file, line, [pred])

@@ -7,10 +7,8 @@ import gradio as gr
 
 import sys
 sys.path.append('./')
-from videollama2.constants import MMODAL_TOKEN_INDEX, DEFAULT_MMODAL_TOKEN
-from videollama2.conversation import conv_templates, SeparatorStyle, Conversation
-from videollama2.model.builder import load_pretrained_model
-from videollama2.mm_utils import KeywordsStoppingCriteria, tokenizer_MMODAL_token, get_model_name_from_path, process_image, process_video
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 
 title_markdown = ("""
@@ -75,113 +73,49 @@ plum_color = gr.themes.colors.Color(
 
 
 class Chat:
-    def __init__(self, model_path, conv_mode, model_base=None, load_8bit=False, load_4bit=False):
-        # disable_torch_init()
-        model_name = get_model_name_from_path(model_path)
-        self.tokenizer, self.model, processor, context_len = load_pretrained_model(
-            model_path, model_base, model_name,
-            load_8bit, load_4bit,
-            offload_folder="save_folder")
-        self.processor = processor
-        self.conv_mode = conv_mode
-        self.conv = conv_templates[conv_mode].copy()
 
-    def get_prompt(self, qs, state):
-        state.append_message(state.roles[0], qs)
-        state.append_message(state.roles[1], None)
-        return state
+    def __init__(self, model_path, load_8bit=False, load_4bit=False):
+        disable_torch_init()
+
+        self.model, self.processor, self.tokenizer = model_init(model_path, load_8bit=load_8bit, load_4bit=load_4bit)
 
     # @spaces.GPU(duration=120)
     @torch.inference_mode()
-    def generate(self, tensor: list, modals: list, prompt: str, first_run: bool, state, temperature, top_p, max_output_tokens):
+    def generate(self, data: list, message, temperature, top_p, max_output_tokens):
         # TODO: support multiple turns of conversation.
-        assert len(tensor) == len(modals)
+        assert len(data) == 1
 
-        # 1. prepare model, tokenizer, and processor.
-        tokenizer, model, processor = self.tokenizer, self.model, self.processor
+        tensor, modal = data[0]
+        response = mm_infer(tensor, message, self.model, self.tokenizer, modal=modal.strip('<>'), 
+            do_sample=True if temperature > 0.0 else False,
+            temperature=temperature,
+            top_p=top_p,
+            max_new_tokens=max_output_tokens)
 
-        # 2. text preprocess (tag process & generate prompt).
-        state = self.get_prompt(prompt, state)
-        prompt = state.get_prompt()
-
-        input_ids = tokenizer_MMODAL_token(prompt, tokenizer, MMODAL_TOKEN_INDEX[modals[0]], return_tensors='pt')
-        input_ids = input_ids.unsqueeze(0).to(self.model.device)
-
-        # 3. generate response according to visual signals and prompts. 
-        stop_str = self.conv.sep if self.conv.sep_style in [SeparatorStyle.SINGLE] else self.conv.sep2
-        # keywords = ["<s>", "</s>"]
-        keywords = [stop_str]
-        stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
-
-        with torch.inference_mode():
-            output_ids = model.generate(
-                input_ids,
-                images_or_videos=tensor,
-                modal_list=modals,
-                do_sample=True,
-                temperature=temperature,
-                top_p=top_p,
-                max_new_tokens=max_output_tokens,
-                use_cache=True,
-                stopping_criteria=[stopping_criteria],
-            )
-
-        outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
-        print(outputs)
-        return outputs, state
+        return response
 
 
 # @spaces.GPU(duration=120)
-def generate(image, video, state, state_, textbox_in, temperature, top_p, max_output_tokens, dtype=torch.float16):
-    if not textbox_in:
-        if len(state_.messages) > 0:
-            textbox_in = state_.messages[-1][1]
-            state_.messages.pop(-1)
-        else:
-            assert "Please enter instruction"
+def generate(image, video, message, chatbot, textbox_in, temperature, top_p, max_output_tokens, dtype=torch.float16):
+    data = []
 
     image = image if image else "none"
     video = video if video else "none"
     assert not (os.path.exists(image) and os.path.exists(video))
 
-    tensor = []
-    modals = []
-
-    if type(state) is not Conversation:
-        state = conv_templates[conv_mode].copy()
-        state_ = conv_templates[conv_mode].copy()
-
-    first_run = False if len(state.messages) > 0 else True
-
-    text_en_in = textbox_in.replace("picture", "image")
-
-    num_frames = handler.model.config.num_frames if hasattr(handler.model.config, "num_frames") else NUM_FRAMES
-
     processor = handler.processor
     if os.path.exists(image) and not os.path.exists(video):
-        tensor.append(process_image(image, processor).to(handler.model.device, dtype=dtype))
-        modals.append('IMAGE')
+        data.append((processor['image'](image).to(handler.model.device, dtype=dtype), '<image>'))
     if not os.path.exists(image) and os.path.exists(video):
-        tensor.append(process_video(video, processor, num_frames=num_frames, sample_scheme='fps').to(handler.model.device, dtype=dtype))
-        modals.append('VIDEO')
+        data.append((processor['video'](video).to(handler.model.device, dtype=dtype), '<video>'))
     if os.path.exists(image) and os.path.exists(video):
         raise NotImplementedError("Not support image and video at the same time")
 
-    # BUG: Only support single video and image inference now.
-    if os.path.exists(image) and not os.path.exists(video):
-        text_en_in = text_en_in.replace(DEFAULT_MMODAL_TOKEN['IMAGE'], '').strip()
-        text_en_in = DEFAULT_MMODAL_TOKEN['IMAGE'] + '\n' + text_en_in
-    if not os.path.exists(image) and os.path.exists(video):
-        text_en_in = text_en_in.replace(DEFAULT_MMODAL_TOKEN['VIDEO'], '').strip()
-        text_en_in = DEFAULT_MMODAL_TOKEN['VIDEO'] + '\n' + text_en_in
-    if os.path.exists(image) and os.path.exists(video):
-        text_en_in = text_en_in.replace(DEFAULT_MMODAL_TOKEN['VIDEO'], '').strip()
-        text_en_in = DEFAULT_MMODAL_TOKEN['VIDEO'] + '\n' + text_en_in
-    text_en_out, state_ = handler.generate(tensor, modals, text_en_in, first_run=first_run, state=state_, temperature=temperature, top_p=top_p, max_output_tokens=max_output_tokens)
-    state_.messages[-1] = (state_.roles[1], text_en_out)
+    assert len(message) % 2 == 0, "The message should be a pair of user and system message."
 
-    text_en_out = text_en_out.split('#')[0]
-    textbox_out = text_en_out
+    message.append({'role': 'user', 'content': textbox_in})
+    text_en_out = handler.generate(data, message, temperature=temperature, top_p=top_p, max_output_tokens=max_output_tokens)
+    message.append({'role': 'assistant', 'content': text_en_out})
 
     show_images = ""
     if os.path.exists(image):
@@ -189,32 +123,26 @@ def generate(image, video, state, state_, textbox_in, temperature, top_p, max_ou
     if os.path.exists(video):
         show_images += f'<video controls playsinline width="500" style="display: inline-block;"  src="./file={video}"></video>'
 
-    state.append_message(state.roles[0], textbox_in + "\n" + show_images)
-    state.append_message(state.roles[1], textbox_out)
+    chatbot.append([textbox_in + "\n" + show_images, text_en_out])
 
-    # BUG: only support single turn conversation now.
-    state_.messages.pop(-1)
-    state_.messages.pop(-1)
-
-    return (gr.update(value=image if os.path.exists(image) else None, interactive=True), 
-            gr.update(value=video if os.path.exists(video) else None, interactive=True), 
-            state.to_gradio_chatbot(), state, state_)
+    return (
+        gr.update(value=image if os.path.exists(image) else None, interactive=True),
+        gr.update(value=video if os.path.exists(video) else None, interactive=True), 
+        message,
+        chatbot)
 
 
-def regenerate(state, state_):
-    state.messages.pop(-1)
-    state.messages.pop(-1)
-    if len(state.messages) > 0:
-        return state.to_gradio_chatbot(), state, state_
-    return state.to_gradio_chatbot(), state, state_
+def regenerate(message, chatbot):
+    message.pop(-1), message.pop(-1)
+    chatbot.pop(-1)
+    return message, chatbot
 
 
-def clear_history(state, state_):
-    state = conv_templates[conv_mode].copy()
-    state_ = conv_templates[conv_mode].copy()
+def clear_history(message, chatbot):
+    message.clear(), chatbot.clear()
     return (gr.update(value=None, interactive=True),
             gr.update(value=None, interactive=True),
-            state.to_gradio_chatbot(), state, state_, 
+            message, chatbot,
             gr.update(value=None, interactive=True))
 
 
@@ -223,12 +151,9 @@ def clear_history(state, state_):
 # 2. The operation or tensor which requires cuda are limited in those functions wrapped via spaces.GPU
 # 3. The function can't return tensor or other cuda objects.
 
-conv_mode = "llama2"
 model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-16F'
 
-device = torch.device("cuda")
-
-handler = Chat(model_path, conv_mode=conv_mode, load_8bit=False, load_4bit=True)
+handler = Chat(model_path, load_8bit=False, load_4bit=True)
 
 textbox = gr.Textbox(show_label=False, placeholder="Enter text and press ENTER", container=False)
 
@@ -243,8 +168,7 @@ theme.set(button_primary_text_color="#9C276A")
 
 with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as demo:
     gr.Markdown(title_markdown)
-    state = gr.State()
-    state_ = gr.State()
+    message = gr.State([])
 
     with gr.Row():
         with gr.Column(scale=3):
@@ -347,20 +271,20 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
 
     submit_btn.click(
         generate, 
-        [image, video, state, state_, textbox, temperature, top_p, max_output_tokens],
-        [image, video, chatbot, state, state_])
+        [image, video, message, chatbot, textbox, temperature, top_p, max_output_tokens],
+        [image, video, message, chatbot])
 
     regenerate_btn.click(
         regenerate, 
-        [state, state_], 
-        [chatbot, state, state_]).then(
+        [message, chatbot], 
+        [message, chatbot]).then(
         generate, 
-        [image, video, state, state_, textbox, temperature, top_p, max_output_tokens], 
-        [image, video, chatbot, state, state_])
+        [image, video, message, chatbot, textbox, temperature, top_p, max_output_tokens], 
+        [image, video, message, chatbot])
 
     clear_btn.click(
         clear_history, 
-        [state, state_],
-        [image, video, chatbot, state, state_, textbox])
+        [message, chatbot],
+        [image, video, message, chatbot, textbox])
 
 demo.launch()

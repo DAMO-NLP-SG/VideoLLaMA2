@@ -149,9 +149,9 @@ VideoLLaMA2
 2. Command:
 ```bash
 # VideoLLaMA2-vllava pretraining
-bash scripts/vllava/stc/pretrain.sh
+bash scripts/vllava/pretrain.sh
 # VideoLLaMA2-vllava finetuning
-bash scripts/vllava/stc/finetune.sh
+bash scripts/vllava/finetune.sh
 ```
 3. Evaluation Data Structure:
 ```bash
@@ -259,74 +259,36 @@ VideoLLaMA2
 
 Video/Image Inference:
 ```python
-import torch
-import transformers
-
 import sys
 sys.path.append('./')
-from videollama2.conversation import conv_templates
-from videollama2.constants import DEFAULT_MMODAL_TOKEN, MMODAL_TOKEN_INDEX
-from videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, process_video, process_image
-from videollama2.model.builder import load_pretrained_model
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 
 def inference():
+    disable_torch_init()
+
     # Video Inference
-    paths = ['assets/cat_and_chicken.mp4']
-    questions = ['What animals are in the video, what are they doing, and how does the video feel?']
+    modal = 'videp'
+    modal_path = 'assets/cat_and_chicken.mp4' 
+    instruct = 'What animals are in the video, what are they doing, and how does the video feel?'
     # Reply:
     # The video features a kitten and a baby chick playing together. The kitten is seen laying on the floor while the baby chick hops around. The two animals interact playfully with each other, and the video has a cute and heartwarming feel to it.
-    modal_list = ['video']
 
     # Image Inference
-    paths = ['assets/sora.png']
-    questions = ['What is the woman wearing, what is she doing, and how does the image feel?']
+    modal = 'image'
+    modal_path = 'assets/sora.png'
+    instruct = 'What is the woman wearing, what is she doing, and how does the image feel?'
     # Reply:
     # The woman in the image is wearing a black coat and sunglasses, and she is walking down a rain-soaked city street. The image feels vibrant and lively, with the bright city lights reflecting off the wet pavement, creating a visually appealing atmosphere. The woman's presence adds a sense of style and confidence to the scene, as she navigates the bustling urban environment.
-    modal_list = ['image']
 
-    # 1. Initialize the model.
     model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
     # Base model inference (only need to replace model_path)
     # model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-Base'
-    model_name = get_model_name_from_path(model_path)
-    tokenizer, model, processor, context_len = load_pretrained_model(model_path, None, model_name)
-    model = model.to('cuda:0')
-    conv_mode = 'llama2'
+    model, processor, tokenizer = model_init(model_path)
+    output = mm_infer(processor[modal](modal_path), instruct, model=model, tokenizer=tokenizer, do_sample=False, modal=modal)
 
-    # 2. Visual preprocess (load & transform image or video).
-    if modal_list[0] == 'video':
-        tensor = process_video(paths[0], processor, model.config.image_aspect_ratio).to(dtype=torch.float16, device='cuda', non_blocking=True)
-        default_mm_token = DEFAULT_MMODAL_TOKEN["VIDEO"]
-        modal_token_index = MMODAL_TOKEN_INDEX["VIDEO"]
-    else:
-        tensor = process_image(paths[0], processor, model.config.image_aspect_ratio)[0].to(dtype=torch.float16, device='cuda', non_blocking=True)
-        default_mm_token = DEFAULT_MMODAL_TOKEN["IMAGE"]
-        modal_token_index = MMODAL_TOKEN_INDEX["IMAGE"]
-    tensor = [tensor]
-
-    # 3. text preprocess (tag process & generate prompt).
-    question = default_mm_token + "\n" + questions[0]
-    conv = conv_templates[conv_mode].copy()
-    conv.append_message(conv.roles[0], question)
-    conv.append_message(conv.roles[1], None)
-    prompt = conv.get_prompt()
-    input_ids = tokenizer_MMODAL_token(prompt, tokenizer, modal_token_index, return_tensors='pt').unsqueeze(0).to('cuda:0')
-
-    with torch.inference_mode():
-        output_ids = model.generate(
-            input_ids,
-            images_or_videos=tensor,
-            modal_list=modal_list,
-            do_sample=True,
-            temperature=0.2,
-            max_new_tokens=1024,
-            use_cache=True,
-        )
-
-    outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-    print(outputs[0])
-
+    print(output)
 
 if __name__ == "__main__":
     inference()

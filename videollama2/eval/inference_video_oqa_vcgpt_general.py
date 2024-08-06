@@ -11,7 +11,8 @@ from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -30,7 +31,7 @@ def get_chunk(lst, n, k):
 
 class VCGPTDataset(Dataset):
 
-    video_formats = ['.mp4', '.avi', '.mov', '.mkv']
+    video_formats = ['.mp4', '.webm', '.avi', '.mov', '.mkv']
 
     def __init__(self, data_list, processor):
         self.data_list = data_list
@@ -71,14 +72,16 @@ def collate_fn(batch):
 
 
 def run_inference(args):
+    disable_torch_init()
+
     # Initialize the model
-    model, processor, tokenizer, version = model_init(args.model_path)
+    model, processor, tokenizer = model_init(args.model_path)
 
     questions = json.load(open(args.question_file, "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
 
     assert args.batch_size == 1, "Batch size must be 1 for inference"
-    dataset = VCGPTDataset(questions, processor)
+    dataset = VCGPTDataset(questions, processor['video'])
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     answer_file = os.path.expanduser(args.answer_file)
@@ -94,14 +97,13 @@ def run_inference(args):
         question = questions[0]
         answer = answers[0]
 
-        output = x_infer(
+        output = mm_infer(
             video_tensor,
-            question, 
-            mode='vanilla',
+            question,
             model=model,
             tokenizer=tokenizer,
+            modal='video',
             do_sample=False,
-            version=version,
         )
 
         qa = {'video_name': video_name, 'Q': question, 'A': answer, 'P': output}

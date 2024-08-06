@@ -17,7 +17,8 @@ from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -181,15 +182,44 @@ def build_videomme_eval(args, processor):
     return dataloader
 
 
-def videomme_dump(record, instruct, output):
+def videomme_dump(record, instruct, options, output):
     letters = ['A', 'B', 'C', 'D']
 
+    digit2word = {
+        '1': 'one',
+        '2': 'two',
+        '3': 'three',
+        '4': 'four',
+        '5': 'five',
+        '6': 'six',
+        '7': 'seven',
+        '8': 'eight',
+        '9': 'nine',
+        '0': 'zero',
+    }
+
+    output = output.replace('answer', '')
+    output = output.replace('Answer', '')
     pred_answer = re.findall('[\(\ \[]*([A-D])[\)\.\ \]]*', output)
     try:
-        assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(record['youtube_id'], instruct + '\n' + output)
-        pred_answer = pred_answer[0].strip()
-        pred_answer = pred_answer.strip('()')
-        pred_idx = letters.index(pred_answer)
+        find_flag = False
+        if len(pred_answer) == 0:
+            for idx, opt in enumerate(options):
+                # Arabic numerals -> English words
+                opt2 = opt
+                if opt in digit2word:
+                    opt2 = digit2word[opt]
+                if opt.lower() in output.lower() or opt2.lower() in output.lower():
+                    pred_idx = idx
+                    find_flag = True
+                    break
+        else:
+            pred_answer = pred_answer[0].strip()
+            pred_answer = pred_answer.strip('()')
+            pred_idx = letters.index(pred_answer)
+            find_flag = True
+
+        assert find_flag, 'The video \"{}\" output: \n\"{}\" is not in the expected format'.format(record['youtube_id'], instruct + '\n' + output)
     except:
         traceback.print_exc()
         pred_idx = 2
@@ -198,8 +228,10 @@ def videomme_dump(record, instruct, output):
 
 
 def run_inference(args):
+    disable_torch_init()
+
     # Initialize the model
-    model, processor, tokenizer, version = model_init(args.model_path)
+    model, processor, tokenizer = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
     answer_sub_file = answer_file.replace('.json', '_sub.json')
@@ -207,7 +239,7 @@ def run_inference(args):
     ans_file = open(answer_file, "w")
     ans_sub_file = open(answer_sub_file, "w")
 
-    val_loader = build_videomme_eval(args, processor)
+    val_loader = build_videomme_eval(args, processor['video'])
 
     # Iterate over each sample in the ground truth file
     for i, (videos, subtitles, records) in enumerate(tqdm(val_loader)):
@@ -231,19 +263,21 @@ def run_inference(args):
         questions = record['questions']
         for idx, question in enumerate(questions):
             q = question['question']
-            ops = question['choices']
+            choices = question['choices']
+            options = [re.findall('[A-D]\. (.*).', c)[0] for c in choices]
 
             instruct = "Select the best answer to the following multiple-choice question based on the video. Respond with only the letter (A, B, C, or D) of the correct option.\n"
             instruct += f"{q}\n"
-            for op_idx, op in enumerate(ops):
-                instruct += f"{op}\n"
-            instruct += "The best answer is: "
-            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False, version=version)
-            new_record['questions'][idx]['response'] = videomme_dump(record, instruct, output)
+            for cho_idx, cho in enumerate(choices):
+                instruct += f"{cho}\n"
+            # instruct += "The best option is: "
+            instruct += "Answer with the option\'s letter from the given choices directly and only give the best option. The best answer is: "
+            output = mm_infer(video_tensor, instruct, model=model, tokenizer=tokenizer, modal='video', do_sample=False)
+            new_record['questions'][idx]['response'] = videomme_dump(record, instruct, options, output)
 
             instruct = f"This video's subtitles are listed below:\n{subtitle}\n" + instruct
-            output = x_infer(video_tensor, instruct, mode='vanilla', model=model, tokenizer=tokenizer, do_sample=False, version=version)
-            new_record_sub['questions'][idx]['response'] = videomme_dump(record, instruct, output)
+            output = mm_infer(video_tensor, instruct, model=model, tokenizer=tokenizer, modal='video', do_sample=False)
+            new_record_sub['questions'][idx]['response'] = videomme_dump(record, instruct, options, output)
 
         ans_file.write(json.dumps(new_record) + ",\n")
         ans_sub_file.write(json.dumps(new_record_sub) + ",\n")

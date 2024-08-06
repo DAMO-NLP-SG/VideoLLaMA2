@@ -20,32 +20,36 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 
-from transformers import AutoConfig, AutoModelForCausalLM, \
-                         MistralConfig, MistralModel, MistralForCausalLM
+from transformers import AutoConfig, AutoModelForCausalLM, PretrainedConfig, \
+                         Phi3Config, Phi3Model, Phi3ForCausalLM
 
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
-from ..videollama2_arch import Videollama2MetaModel, Videollama2MetaForCausalLM
+from .videollama2_arch import Videollama2MetaModel, Videollama2MetaForCausalLM
 
 
-class Videollama2MistralConfig(MistralConfig):
-    model_type = "videollama2_mistral"
+class Videollama2Phi3Config(Phi3Config):
+    model_type = "videollama2_phi3"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = "videollama2_phi3"
 
 
-class Videollama2MistralModel(Videollama2MetaModel, MistralModel):
-    config_class = Videollama2MistralConfig
+class Videollama2Phi3Model(Videollama2MetaModel, Phi3Model):
+    config_class = Videollama2Phi3Config
 
-    def __init__(self, config: MistralConfig):
-        super(Videollama2MistralModel, self).__init__(config)
+    def __init__(self, config: Phi3Config):
+        super(Videollama2Phi3Model, self).__init__(config)
 
 
-class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausalLM):
-    config_class = Videollama2MistralConfig
+class Videollama2Phi3ForCausalLM(Phi3ForCausalLM, Videollama2MetaForCausalLM):
+    config_class = Videollama2Phi3Config
 
     def __init__(self, config, **kwargs):
-        super(MistralForCausalLM, self).__init__(config)
-        self.model = Videollama2MistralModel(config)
+        super(Phi3ForCausalLM, self).__init__(config)
+        self.model = Videollama2Phi3Model(config)
         # self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
@@ -87,7 +91,7 @@ class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausal
                 images
             )
 
-        return super().forward(
+        outputs = super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             past_key_values=past_key_values,
@@ -99,12 +103,15 @@ class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausal
             return_dict=return_dict
         )
 
+        outputs.labels = labels
+
+        return outputs
+
     @torch.no_grad()
     def generate(
         self,
         inputs: Optional[torch.Tensor] = None,
-        images_or_videos: Optional[torch.Tensor] = None,
-        modal_list: Optional[torch.Tensor] = None,
+        images: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Union[GenerateOutput, torch.LongTensor]:
         position_ids = kwargs.pop("position_ids", None)
@@ -112,7 +119,7 @@ class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausal
         if "inputs_embeds" in kwargs:
             raise NotImplementedError("`inputs_embeds` is not supported")
 
-        if images_or_videos is not None:
+        if images is not None:
             (
                 input_ids,
                 attention_mask,
@@ -124,7 +131,7 @@ class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausal
                 attention_mask=attention_mask,
                 past_key_values=None,
                 labels=None,
-                X_modalities=[images_or_videos, modal_list]
+                images=images
             )
         else:
             inputs_embeds = self.get_model().embed_tokens(inputs)
@@ -146,5 +153,5 @@ class Videollama2MistralForCausalLM(MistralForCausalLM, Videollama2MetaForCausal
         return _inputs
 
 
-AutoConfig.register("videollama2_mistral", Videollama2MistralConfig)
-AutoModelForCausalLM.register(Videollama2MistralConfig, Videollama2MistralForCausalLM)
+AutoConfig.register("videollama2_phi3", Videollama2Phi3Config)
+AutoModelForCausalLM.register(Videollama2Phi3Config, Videollama2Phi3ForCausalLM)

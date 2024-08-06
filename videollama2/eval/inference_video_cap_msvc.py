@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -25,7 +26,9 @@ def get_chunk(lst, n, k):
 
 
 def run_inference(args):
-    model, processor, tokenizer, version = model_init(args.model_path)
+    disable_torch_init()
+
+    model, processor, tokenizer = model_init(args.model_path)
 
     gt_questions = json.load(open(args.question_file, "r"))
     gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
@@ -43,16 +46,15 @@ def run_inference(args):
         answer = sample['captions']
 
         video_path = os.path.join(args.video_folder, video_name)
-        video_tensor = processor(video_path)
+        video_tensor = processor['video'](video_path)
 
-        output = x_infer(
+        output = mm_infer(
             video_tensor,
             question, 
-            mode='vanilla',
             model=model,
             tokenizer=tokenizer,
-            do_sample=True,
-            version=version,
+            modal='video',
+            do_sample=False,
         )
 
         sample_set = {'video_name': video_name, 'question': question, 'answer': answer, 'pred': output}

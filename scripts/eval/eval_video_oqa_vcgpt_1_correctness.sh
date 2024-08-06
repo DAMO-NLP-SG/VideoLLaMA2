@@ -2,8 +2,8 @@ set -x
 
 EVAL_DATA_DIR=dataset/videollm_eval
 OUTPUT_DIR=eval
-CKPT_NAME=VideoLLaMA2-7B
-CKPT=DAMO-NLP-SG/${CKPT_NAME}
+CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"

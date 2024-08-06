@@ -1,12 +1,11 @@
 import os
-import re
-import math
 import json
+import math
 import argparse
 import warnings
+import traceback
 from tqdm import tqdm
 
-import torch
 from torch.utils.data import Dataset, DataLoader
 
 import sys
@@ -29,25 +28,33 @@ def get_chunk(lst, n, k):
     return chunks[k]
 
 
-class VCGPTDataset(Dataset):
+class ActivitynetDataset(Dataset):
 
     video_formats = ['.mp4', '.webm', '.avi', '.mov', '.mkv']
 
-    def __init__(self, data_list, processor):
-        self.data_list = data_list
+    def __init__(self, questions, answers, processor):
+        self.questions = questions
+        self.answers   = answers
         self.processor = processor
 
     def __len__(self):
-        return len(self.data_list)
+        return len(self.questions)
     
     def __getitem__(self, idx):
-        line = self.data_list[idx]
-        question1 = line['Q1']
-        question2 = line['Q2']
-        answer = line['A']
-        video_name = line['video_name']
+        sample = self.questions[idx]
+        answer = self.answers[idx]
+
+        video_name  = sample['video_name']
+        question    = sample['question']
+        question_id = sample['question_id']
+        answer      = answer['answer']
 
         for fmt in self.video_formats:  # Added this line
+            temp_path = os.path.join(args.video_folder, f"v_{video_name}{fmt}")
+            if os.path.exists(temp_path):
+                video_path = temp_path
+                break
+            # BUG: compatibility for MSVD, MSRVTT, TGIF
             temp_path = os.path.join(args.video_folder, f"{video_name}{fmt}")
             if os.path.exists(temp_path):
                 video_path = temp_path
@@ -56,22 +63,21 @@ class VCGPTDataset(Dataset):
         video_tensor = self.processor(video_path)
 
         return {
-            'video': video_tensor,
-            'video_name': video_name,
-            'question1': question1,
-            'question2': question2,
-            'answer': answer,
+            'video':       video_tensor,
+            'video_name':  video_name,
+            'question':    question,
+            'question_id': question_id,
+            'answer':      answer,
         }
 
 
 def collate_fn(batch):
-    vid = [x['video'] for x in batch]
+    vid  = [x['video'] for x in batch]
     v_id = [x['video_name'] for x in batch]
-    qus1 = [x['question1'] for x in batch]
-    qus2 = [x['question2'] for x in batch]
-    ans = [x['answer'] for x in batch]
-    vid = torch.stack(vid, dim=0)
-    return vid, v_id, qus1, qus2, ans
+    qus  = [x['question'] for x in batch]
+    qid  = [x['question_id'] for x in batch]
+    ans  = [x['answer'] for x in batch]
+    return vid, v_id, qus, qid, ans
 
 
 def run_inference(args):
@@ -80,50 +86,40 @@ def run_inference(args):
     # Initialize the model
     model, processor, tokenizer = model_init(args.model_path)
 
-    questions = json.load(open(args.question_file, "r"))
-    questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
+    gt_questions = json.load(open(args.question_file, "r"))
+    gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
+    gt_answers = json.load(open(args.answer_file, "r"))
+    gt_answers = get_chunk(gt_answers, args.num_chunks, args.chunk_idx)
 
     assert args.batch_size == 1, "Batch size must be 1 for inference"
-    dataset = VCGPTDataset(questions, processor['video'])
+    dataset = ActivitynetDataset(gt_questions, gt_answers, processor['video'])
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
-    answer_file = os.path.expanduser(args.answer_file)
-    os.makedirs(os.path.dirname(answer_file), exist_ok=True)
+    answer_file = os.path.join(args.output_file)
+    os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
     ans_file = open(answer_file, "w")
 
-    output_list = []  # List to store the output results
-
     # Iterate over each sample in the ground truth file
-    for i, (video_tensors, video_names, questions1, questions2, answers) in enumerate(tqdm(dataloader)):
-
-        # reduce batch dimension
+    for i, (video_tensors, video_names, questions, question_ids, answers) in enumerate(tqdm(dataloader)):
         video_tensor = video_tensors[0]
-        video_name = video_names[0]
-        question1 = questions1[0]
-        question2 = questions2[0]
-        answer = answers[0]
+        video_name   = video_names[0]
+        question     = questions[0]
+        question_id  = question_ids[0]
+        answer       = answers[0]
 
-        output1 = mm_infer(
+        # question = question + '\n' + 'Answer the question using a single word or a short phrase with multiple words.'
+
+        output = mm_infer(
             video_tensor,
-            question1, 
+            question,
             model=model,
             tokenizer=tokenizer,
             modal='video',
             do_sample=False,
         )
 
-        output2 = mm_infer(
-            video_tensor,
-            question2,
-            model=model,
-            tokenizer=tokenizer,
-            do_sample=False,
-            modal='video',
-        )
-
-        qa = {'video_name': video_name, 'Q1': question1, 'Q2': question2, 'A': answer, 'P1': output1, 'P2': output2}
-
-        ans_file.write(json.dumps(qa) + "\n")
+        sample_set = {'id': question_id, 'question': question, 'answer': answer, 'pred': output}
+        ans_file.write(json.dumps(sample_set) + "\n")
 
     ans_file.close()
 
@@ -131,20 +127,16 @@ def run_inference(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    # Define the command-line arguments
     parser.add_argument('--model-path', help='', required=True)
-    parser.add_argument('--model_base', help='', default=None, type=str, required=False)
     parser.add_argument('--video-folder', help='Directory containing video files.', required=True)
     parser.add_argument('--question-file', help='Path to the ground truth file containing question.', required=True)
     parser.add_argument('--answer-file', help='Path to the ground truth file containing answers.', required=True)
-    parser.add_argument("--conv-mode", type=str, default="llava_v1")
+    parser.add_argument('--output-file', help='Directory to save the model results JSON.', required=True)
     parser.add_argument("--num-chunks", type=int, default=1)
     parser.add_argument("--chunk-idx", type=int, default=0)
     parser.add_argument("--device", type=str, required=False, default='cuda:0')
-    parser.add_argument("--model_max_length", type=int, required=False, default=2048)
     parser.add_argument("--batch-size", type=int, required=False, default=1)
     parser.add_argument("--num-workers", type=int, required=False, default=8)
-
     args = parser.parse_args()
 
     run_inference(args)

@@ -28,8 +28,8 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2_vllava
-RUN_NAME=videollama2_vllava
+export WANDB_PROJECT=videollama2qwen2
+RUN_NAME=vllava_settings
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 
@@ -40,16 +40,14 @@ torchrun --nnodes $WORLD_SIZE \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
     --deepspeed scripts/zero3.json \
-    --version mistral \
+    --model_type videollama2_qwen2 \
+    --model_path Qwen/Qwen2-7B-Instruct \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type stc_connector \
-    --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \
+    --pretrain_mm_mlp_adapter ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME}/mm_projector.bin \
     --data_path   ${DATA_DIR}/videollava_sft/videochatgpt_llavaimage_tune.json \
     --data_folder ${DATA_DIR}/videollava_sft/ \
-    --pretrain_mm_mlp_adapter ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME}/mm_projector.bin \
     --mm_vision_select_layer -2 \
-    --mm_use_im_start_end False \
-    --mm_use_im_patch_token False \
     --image_aspect_ratio pad \
     --num_frames 8 \
     --bf16 True \
