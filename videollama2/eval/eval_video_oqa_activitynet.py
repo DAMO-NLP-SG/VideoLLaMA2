@@ -5,7 +5,7 @@ import time
 import argparse
 import traceback
 from tqdm import tqdm
-from multiprocessing.pool import Pool
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from openai import AzureOpenAI
 
@@ -71,12 +71,13 @@ def prompt_gpt(question, answer, pred, key, qa_set, output_dir):
         json.dump(result_qa_pair, f)
 
 
-def annotate(prediction_set, caption_files, output_dir, args):
+def annotate(task_arg):
     """
     Evaluates question and answer pairs using GPT-3
     Returns a score for correctness.
     """
-    
+    prediction_set, caption_files, output_dir, args = task_arg
+
     for file in tqdm(caption_files):
         key = file[:-5] # Strip file extension
         qa_set = prediction_set[key]
@@ -86,8 +87,8 @@ def annotate(prediction_set, caption_files, output_dir, args):
         try:
             prompt_gpt(question, answer, pred, key, qa_set, output_dir)
         except Exception as e:
-            traceback.print_exc()
             prompt_gpt(question, answer, pred[:50], key, qa_set, output_dir)
+            traceback.print_exc()
 
     time.sleep(1)
 
@@ -141,39 +142,29 @@ def main(args):
             task_args = [(prediction_set, part, args.output_dir, args) for part in all_parts]
 
             # Use a pool of workers to process the files in parallel.
-            with Pool() as pool:
-                pool.starmap(annotate, task_args)
+            with ThreadPoolExecutor(max_workers=args.num_tasks) as executor:
+                list(tqdm(executor.map(annotate, task_args), total=len(task_args)))
 
         except Exception as e:
             print(f"Error: {e}")
 
-    # Combine all the processed files into one
-    combined_contents = {}
-    json_path = args.output_json
+    # multiprocessing to combine json files
+    def combine_json(file_name):
+        file_path = os.path.join(output_dir, file_name)
+        with open(file_path, "r") as json_file:
+            content = json.load(json_file)
+            return (file_name[:-5], content)
 
-    # Iterate through json files
-    for file_name in tqdm(os.listdir(output_dir)):
-        if file_name.endswith(".json"):
-            file_path = os.path.join(output_dir, file_name)
-            with open(file_path, "r") as json_file:
-                try:
-                    content = json.load(json_file)
-                except:
-                    print(json_file)
-                    exit(0)
-                combined_contents[file_name[:-5]] = content
-
-    # Write combined content to a json file
-    with open(json_path, "w") as json_file:
-        json.dump(combined_contents, json_file)
-    print("All evaluation completed!")
+    files = os.listdir(output_dir)
+    with ThreadPoolExecutor(max_workers=64) as executor:
+        combined_contents = list(tqdm(executor.map(combine_json, files), total=len(files)))
 
     # Calculate average score and accuracy
     score_sum = 0
     count = 0
     yes_count = 0
     no_count = 0
-    for key, result in tqdm(combined_contents.items()):
+    for key, result in tqdm(combined_contents):
         try:
             # Computing score
             count += 1
