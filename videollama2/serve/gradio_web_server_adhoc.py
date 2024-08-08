@@ -1,6 +1,7 @@
-# import spaces
+import spaces
 
 import os
+import re
 
 import torch
 import gradio as gr
@@ -79,7 +80,7 @@ class Chat:
 
         self.model, self.processor, self.tokenizer = model_init(model_path, load_8bit=load_8bit, load_4bit=load_4bit)
 
-    # @spaces.GPU(duration=120)
+    @spaces.GPU(duration=120)
     @torch.inference_mode()
     def generate(self, data: list, message, temperature, top_p, max_output_tokens):
         # TODO: support multiple turns of conversation.
@@ -95,41 +96,62 @@ class Chat:
         return response
 
 
-# @spaces.GPU(duration=120)
+@spaces.GPU(duration=120)
 def generate(image, video, message, chatbot, textbox_in, temperature, top_p, max_output_tokens, dtype=torch.float16):
     data = []
 
-    image = image if image else "none"
-    video = video if video else "none"
-    assert not (os.path.exists(image) and os.path.exists(video))
-
     processor = handler.processor
-    if os.path.exists(image) and not os.path.exists(video):
-        data.append((processor['image'](image).to(handler.model.device, dtype=dtype), '<image>'))
-    if not os.path.exists(image) and os.path.exists(video):
-        data.append((processor['video'](video).to(handler.model.device, dtype=dtype), '<video>'))
-    if os.path.exists(image) and os.path.exists(video):
-        raise NotImplementedError("Not support image and video at the same time")
+    try:
+        if image is not None:
+            data.append((processor['image'](image).to(handler.model.device, dtype=dtype), '<image>'))
+        elif video is not None:
+            data.append((processor['video'](video).to(handler.model.device, dtype=dtype), '<video>'))
+        elif image is None and video is None:
+            data.append((None, '<text>'))
+        else:
+            raise NotImplementedError("Not support image and video at the same time")
+    except Exception as e:
+        traceback.print_exc()
+        return gr.update(value=None, interactive=True), gr.update(value=None, interactive=True), message, chatbot
 
     assert len(message) % 2 == 0, "The message should be a pair of user and system message."
+
+    show_images = ""
+    if image is not None:
+        show_images += f'<img src="./file={image}" style="display: inline-block;width: 250px;max-height: 400px;">'
+    if video is not None:
+        show_images += f'<video controls playsinline width="500" style="display: inline-block;"  src="./file={video}"></video>'
+
+    one_turn_chat = [textbox_in, None]
+
+    # 1. first run case
+    if len(chatbot) == 0:
+        one_turn_chat[0] += "\n" + show_images
+    # 2. not first run case
+    else:
+        previous_image = re.findall(r'<img src="./file=(.+?)"', chatbot[0][0])
+        previous_video = re.findall(r'<video controls playsinline width="500" style="display: inline-block;"  src="./file=(.+?)"', chatbot[0][0])
+        if len(previous_image) > 0:
+            previous_image = previous_image[0]
+            # 2.1 new image append or pure text input will start a new conversation
+            if previous_image != image:
+                message.clear()
+                one_turn_chat[0] += "\n" + show_images if image is not None else ""
+        elif len(previous_video) > 0:
+            previous_video = previous_video[0]
+            # 2.2 new video append or pure text input will start a new conversation
+            if previous_video != video:
+                message.clear()
+                one_turn_chat[0] += "\n" + show_images if video is not None else ""
 
     message.append({'role': 'user', 'content': textbox_in})
     text_en_out = handler.generate(data, message, temperature=temperature, top_p=top_p, max_output_tokens=max_output_tokens)
     message.append({'role': 'assistant', 'content': text_en_out})
 
-    show_images = ""
-    if os.path.exists(image):
-        show_images += f'<img src="./file={image}" style="display: inline-block;width: 250px;max-height: 400px;">'
-    if os.path.exists(video):
-        show_images += f'<video controls playsinline width="500" style="display: inline-block;"  src="./file={video}"></video>'
+    one_turn_chat[1] = text_en_out
+    chatbot.append(one_turn_chat)
 
-    chatbot.append([textbox_in + "\n" + show_images, text_en_out])
-
-    return (
-        gr.update(value=image if os.path.exists(image) else None, interactive=True),
-        gr.update(value=video if os.path.exists(video) else None, interactive=True), 
-        message,
-        chatbot)
+    return gr.update(value=image, interactive=True), gr.update(value=video, interactive=True), message, chatbot
 
 
 def regenerate(message, chatbot):
@@ -147,7 +169,7 @@ def clear_history(message, chatbot):
 
 
 # BUG of Zero Environment
-# 1. The environment is fixed to torch==2.0.1+cu117, gradio>=4.x.x
+# 1. The environment is fixed to torch>=2.0,<=2.2, gradio>=4.x.x
 # 2. The operation or tensor which requires cuda are limited in those functions wrapped via spaces.GPU
 # 3. The function can't return tensor or other cuda objects.
 
