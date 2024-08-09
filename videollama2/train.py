@@ -340,8 +340,7 @@ class LazySupervisedDataset(Dataset):
             data_dict['video'] = video
         elif self.data_args.is_multimodal:
             # image does not exist in the data, but the model is multimodal
-            crop_size = self.data_args.image_processor.crop_size
-            data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
+            data_dict['image'] = torch.zeros(3, self.data_args.image_size, self.data_args.image_size)
         return data_dict
 
 
@@ -511,6 +510,8 @@ def train(attn_implementation=None):
 
         vision_tower = model.get_vision_tower()
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
+
+        data_args.image_size = vision_tower.image_size
 
         data_args.image_processor = vision_tower.image_processor
         data_args.video_processor = vision_tower.video_processor if hasattr(vision_tower, "video_processor") else vision_tower.image_processor

@@ -5,6 +5,7 @@ import base64
 import traceback
 from io import BytesIO
 
+import cv2
 import torch
 import imageio
 import numpy as np
@@ -172,7 +173,7 @@ def process_video(video_path, processor, s=None, e=None, aspect_ratio='pad', num
         if os.path.isdir(video_path): 
             video_data = [Image.open(os.path.join(video_path, frame_files[f_idx])) for f_idx in sampled_frame_indices]
         elif video_path.endswith('.gif'):
-            video_data = [Image.fromarray(frame) for idx, frame in enumerate(gif_reader) if idx in sampled_frame_indices]
+            video_data = [Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)) for idx, frame in enumerate(gif_reader) if idx in sampled_frame_indices]
         else:
             video_data = [Image.fromarray(frame) for frame in vreader.get_batch(sampled_frame_indices).asnumpy()]
 

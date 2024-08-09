@@ -88,6 +88,10 @@ class CLIPVisionTower(nn.Module):
     def num_patches_per_side(self):
         return self.config.image_size // self.config.patch_size
 
+    @property
+    def image_size(self):
+        return self.config.image_size
+
 
 class SiglipVisionTower(nn.Module):
 
@@ -165,7 +169,11 @@ class SiglipVisionTower(nn.Module):
     @property
     def num_patches_per_side(self):
         return self.config.image_size // self.config.patch_size
-        
+
+    @property
+    def image_size(self):
+        return self.config.image_size
+
 
 def build_vision_tower(vision_tower_cfg, **kwargs):
     vision_tower = getattr(vision_tower_cfg, 'mm_vision_tower', getattr(vision_tower_cfg, 'vision_tower', None))
