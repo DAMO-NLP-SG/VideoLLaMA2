@@ -93,7 +93,7 @@ def mm_infer(image_or_video, instruct, model, tokenizer, modal='video', **kwargs
     do_sample = kwargs.get('do_sample', False)
     temperature = kwargs.get('temperature', 0.2 if do_sample else 0.0)
     top_p = kwargs.get('top_p', 0.9)
-    max_new_tokens = kwargs.get('max_new_tokens', 1024)
+    max_new_tokens = kwargs.get('max_new_tokens', 4096)
 
     with torch.inference_mode():
         output_ids = model.generate(
