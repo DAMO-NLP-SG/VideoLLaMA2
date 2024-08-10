@@ -428,8 +428,8 @@ def train(attn_implementation=None):
                 bnb_4bit_quant_storage=compute_dtype,
             )
         ))
-    
-    config = transformers.AutoConfig.from_pretrained(model_args.model_path, trust_remote_code=True)
+
+    config = VLLMConfigs[model_args.model_type].from_pretrained(model_args.model_path, trust_remote_code=True)
     if 'gemma2' in model_args.model_type:
         config._attn_implementation = 'eager'
     else:
