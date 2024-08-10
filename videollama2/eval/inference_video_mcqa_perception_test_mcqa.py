@@ -129,7 +129,7 @@ def run_inference(args):
             output = output.replace('Answer', '')
             pred_answer = re.findall('\(*[A-C]\)*', output)
             try:
-                assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(video_id, instruct + '\n' + output)
+                assert len(pred_answer) >= 1, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(video_id, instruct, output)
                 pred_answer = pred_answer[0].strip()
                 # if not pred_answer.startswith('('):
                 pred_answer = pred_answer.strip('()')

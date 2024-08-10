@@ -90,7 +90,8 @@ def egoschema_dump(ans_file, line, outputs):
         output = output.replace('Answer', '')
         pred_answer = re.findall('[\(\ ]*[A-E][\)\ ]*', output)
         try:
-            assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['q_uid'], instruct + '\n' + output)
+            
+            assert len(pred_answer) >= 1, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(line['q_uid'], instruct, output)
             pred_answer = pred_answer[0].strip()
             pred_answer = pred_answer.strip('()')
             pred_idx = letters.index(pred_answer)

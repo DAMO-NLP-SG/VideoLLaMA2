@@ -219,7 +219,7 @@ def videomme_dump(record, instruct, options, output):
             pred_idx = letters.index(pred_answer)
             find_flag = True
 
-        assert find_flag, 'The video \"{}\" output: \n\"{}\" is not in the expected format'.format(record['youtube_id'], instruct + '\n' + output)
+        assert find_flag, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(record['youtube_id'], instruct, output)
     except:
         traceback.print_exc()
         pred_idx = 2

@@ -141,7 +141,7 @@ def mvbench_dump(vid, instruct, letters, options, output):
             pred_idx = letters.index(pred_answer)
             find_flag = True
 
-        assert find_flag, 'The video \"{}\" output: \n\"{}\" is not in the expected format'.format(vid, instruct + '\n' + output)
+        assert find_flag, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(vid, instruct, output)
     except:
         traceback.print_exc()
         pred_idx = 2
