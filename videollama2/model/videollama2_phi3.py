@@ -73,6 +73,7 @@ class Videollama2Phi3ForCausalLM(Phi3ForCausalLM, Videollama2MetaForCausalLM):
         output_hidden_states: Optional[bool] = None,
         images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
+        cache_position: Optional[int] = None,
         **kwargs
     ) -> Union[Tuple, CausalLMOutputWithPast]:
 
@@ -100,7 +101,8 @@ class Videollama2Phi3ForCausalLM(Phi3ForCausalLM, Videollama2MetaForCausalLM):
             use_cache=use_cache,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
-            return_dict=return_dict
+            return_dict=return_dict,
+            cache_position=cache_position,
         )
 
         outputs.labels = labels

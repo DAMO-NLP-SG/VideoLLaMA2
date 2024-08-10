@@ -27,7 +27,7 @@ from transformers.generation.utils import GenerateOutput
 from .videollama2_arch import Videollama2MetaModel, Videollama2MetaForCausalLM
 
 
-class Videollama2Config(LlamaConfig):
+class Videollama2LlamaConfig(LlamaConfig):
     model_type = "videollama2_llama"
 
     def __init__(self, **kwargs):
@@ -36,14 +36,14 @@ class Videollama2Config(LlamaConfig):
 
 
 class Videollama2LlamaModel(Videollama2MetaModel, LlamaModel):
-    config_class = Videollama2Config
+    config_class = Videollama2LlamaConfig
 
     def __init__(self, config: LlamaConfig):
         super(Videollama2LlamaModel, self).__init__(config)
 
 
 class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
-    config_class = Videollama2Config
+    config_class = Videollama2LlamaConfig
 
     def __init__(self, config, **kwargs):
         super(LlamaForCausalLM, self).__init__(config)
@@ -151,5 +151,5 @@ class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
         return _inputs
 
 
-AutoConfig.register("videollama2_llama", Videollama2Config)
-AutoModelForCausalLM.register(Videollama2Config, Videollama2LlamaForCausalLM)
+AutoConfig.register("videollama2_llama", Videollama2LlamaConfig)
+AutoModelForCausalLM.register(Videollama2LlamaConfig, Videollama2LlamaForCausalLM)
