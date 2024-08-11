@@ -58,7 +58,7 @@ def mm_infer(image_or_video, instruct, model, tokenizer, modal='video', **kwargs
         tensor = None
     else:
         tensor = image_or_video.half().cuda()
-        tensor = [(tensor, modal_token)]
+        tensor = [(tensor, modal)]
 
     # 2. text preprocess (tag process & generate prompt).
     if isinstance(instruct, str):
@@ -93,7 +93,7 @@ def mm_infer(image_or_video, instruct, model, tokenizer, modal='video', **kwargs
     do_sample = kwargs.get('do_sample', False)
     temperature = kwargs.get('temperature', 0.2 if do_sample else 0.0)
     top_p = kwargs.get('top_p', 0.9)
-    max_new_tokens = kwargs.get('max_new_tokens', 4096)
+    max_new_tokens = kwargs.get('max_new_tokens', 2048)
 
     with torch.inference_mode():
         output_ids = model.generate(
