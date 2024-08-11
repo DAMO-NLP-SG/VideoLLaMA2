@@ -25,6 +25,44 @@ def get_chunk(lst, n, k):
     return chunks[k]
 
 
+class MSVCDataset(Dataset):
+
+    video_formats = ['.mp4', '.webm', '.avi', '.mov', '.mkv']
+
+    def __init__(self, folder, questions, processor):
+        self.folder = folder
+        self.questions = questions
+        self.processor = processor
+
+    def __len__(self):
+        return len(self.questions)
+    
+    def __getitem__(self, idx):
+        sample = self.questions[idx]
+
+        video_name = sample['video_path']
+        question   = sample['question']
+        answer     = sample['captions']
+
+        video_path = os.path.join(self..folder, video_name)
+        video_tensor = self.processor(video_path)
+
+        return {
+            'video':       video_tensor,
+            'video_name':  video_name,
+            'question':    question,
+            'answer':      answer,
+        }
+
+
+def collate_fn(batch):
+    vid  = [x['video'] for x in batch]
+    v_id = [x['video_name'] for x in batch]
+    qus  = [x['question'] for x in batch]
+    ans  = [x['answer'] for x in batch]
+    return vid, v_id, qus, ans
+
+
 def run_inference(args):
     disable_torch_init()
 
@@ -37,16 +75,16 @@ def run_inference(args):
     os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
     ans_file = open(answer_file, "w")
 
-    video_formats = ['.mp4', '.avi', '.mov', '.mkv']
+    assert args.batch_size == 1, "Batch size must be 1 for inference"
+    dataset = MSVCDataset(args.video_folder, gt_questions, processor['video'])
+    dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     # Iterate over each sample in the ground truth file
-    for idx, sample in enumerate(tqdm(gt_questions)):
-        video_name = sample['video_path']
-        question = sample['question']
-        answer = sample['captions']
-
-        video_path = os.path.join(args.video_folder, video_name)
-        video_tensor = processor['video'](video_path)
+    for idx, (video_tensors, video_names, questions, question_ids, answers) in enumerate(tqdm(gt_questions)):
+        video_tensor = video_tensors[0]
+        video_name   = video_names[0]
+        question     = questions[0]
+        answer       = answers[0]
 
         output = mm_infer(
             video_tensor,
@@ -73,6 +111,8 @@ if __name__ == "__main__":
     parser.add_argument("--num-chunks", type=int, default=1)
     parser.add_argument("--chunk-idx", type=int, default=0)
     parser.add_argument("--device", type=str, required=False, default='cuda:0')
+    parser.add_argument("--batch-size", type=int, required=False, default=1)
+    parser.add_argument("--num-workers", type=int, required=False, default=8)
     args = parser.parse_args()
 
     run_inference(args)
