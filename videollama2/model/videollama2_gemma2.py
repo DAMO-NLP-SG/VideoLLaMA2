@@ -145,6 +145,23 @@ class Videollama2Gemma2ForCausalLM(Gemma2ForCausalLM, Videollama2MetaForCausalLM
             **kwargs
         )
 
+    def _prepare_generated_length(self, model_input_name, inputs_tensor, **kwargs):
+        if model_input_name == "inputs_embeds":
+            self.inputs_embeds_length = inputs_tensor.size(1)
+        else:
+            self.inputs_embeds_length = 0
+        return super()._prepare_generated_length(
+            model_input_name=model_input_name, 
+            inputs_tensor=inputs_tensor, 
+            **kwargs)
+
+    def _get_cache(self, cache_implementation: str, max_batch_size: int, max_cache_len: int, **kwargs):
+        return super()._get_cache(
+            cache_implementation=cache_implementation,
+            max_batch_size=max_batch_size,
+            max_cache_len=max_cache_len + self.inputs_embeds_length,
+            **kwargs)
+
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None, inputs_embeds=None, **kwargs):
         images = kwargs.pop("images", None)
         _inputs = super().prepare_inputs_for_generation(
