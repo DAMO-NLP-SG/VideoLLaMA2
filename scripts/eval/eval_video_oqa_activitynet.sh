@@ -2,7 +2,8 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+# CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+CKPT=work_dirs/videollama2gemma2/finetune_2b_vllama2
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -40,9 +41,9 @@ if [ ! -f "$output_file" ]; then
 fi
 
 
-AZURE_API_KEY=your_key
-AZURE_API_ENDPOINT=your_endpoint
-AZURE_API_DEPLOYNAME=your_deployname
+AZURE_API_KEY=a7f9bc087b7143a69d59a68f01a2b450
+AZURE_API_ENDPOINT=https://vl-australiaeast.openai.azure.com/
+AZURE_API_DEPLOYNAME=gpt35-turbo-0613
 
 python3 videollama2/eval/eval_video_oqa_activitynet.py \
     --pred-path ${output_file} \
