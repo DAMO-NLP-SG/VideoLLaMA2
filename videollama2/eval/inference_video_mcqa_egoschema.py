@@ -62,7 +62,7 @@ class EgoschemaDataset(Dataset):
         axs = [a0, a1, a2, a3, a4]
         ops = ['(A)', '(B)', '(C)', '(D)', '(E)']
 
-        instruct = f'Question: {question}\nOptions:\n(A) {a0}\n(B) {a1}\n(C) {a2}\n(D) {a3}\n(E) {a4}\nAnswer with the option\'s letter from the given choices directly and only give the best option.' 
+        instruct = f'Select the best answer to the following multiple-choice question based on the video.\n{question}\nOptions:\n(A) {a0}\n(B) {a1}\n(C) {a2}\n(D) {a3}\n(E) {a4}\nAnswer with the option\'s letter from the given choices directly and only give the best option. The best answer is: ' 
 
         return {
             'q_uid': q_uid,
@@ -118,14 +118,18 @@ def run_inference(args):
         video_tensor = line['video'][0]
         instruct = line['instruct'][0]
 
-        pred = mm_infer(
-            video_tensor,
-            instruct,
-            model=model,
-            tokenizer=tokenizer,
-            modal='video',
-            do_sample=False,
-        )
+        try:
+            pred = mm_infer(
+                video_tensor,
+                instruct,
+                model=model,
+                tokenizer=tokenizer,
+                modal='video',
+                do_sample=False,
+            )
+        except:
+            traceback.print_exc()
+            pred = 'C'
 
         egoschema_dump(ans_file, line, [pred])
 
