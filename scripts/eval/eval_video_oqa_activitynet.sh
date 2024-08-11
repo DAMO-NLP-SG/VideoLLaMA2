@@ -40,10 +40,9 @@ if [ ! -f "$output_file" ]; then
     done
 fi
 
-
-AZURE_API_KEY=a7f9bc087b7143a69d59a68f01a2b450
-AZURE_API_ENDPOINT=https://vl-australiaeast.openai.azure.com/
-AZURE_API_DEPLOYNAME=gpt35-turbo-0613
+AZURE_API_KEY=your_key
+AZURE_API_ENDPOINT=your_endpoint
+AZURE_API_DEPLOYNAME=your_deployname
 
 python3 videollama2/eval/eval_video_oqa_activitynet.py \
     --pred-path ${output_file} \
