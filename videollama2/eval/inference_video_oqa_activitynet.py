@@ -109,14 +109,18 @@ def run_inference(args):
 
         # question = question + '\n' + 'Answer the question using a single word or a short phrase with multiple words.'
 
-        output = mm_infer(
-            video_tensor,
-            question,
-            model=model,
-            tokenizer=tokenizer,
-            modal='video',
-            do_sample=False,
-        )
+        try:
+            output = mm_infer(
+                video_tensor,
+                question,
+                model=model,
+                tokenizer=tokenizer,
+                modal='video',
+                do_sample=False,
+            )
+        except:
+            traceback.print_exc()
+            output = "error"
 
         sample_set = {'id': question_id, 'question': question, 'answer': answer, 'pred': output}
         ans_file.write(json.dumps(sample_set) + "\n")

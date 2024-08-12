@@ -5,6 +5,8 @@ import json
 import warnings
 from tqdm import tqdm
 
+from torch.utils.data import Dataset, DataLoader
+
 import sys
 sys.path.append('./')
 from videollama2 import model_init, mm_infer
@@ -44,7 +46,7 @@ class MSVCDataset(Dataset):
         question   = sample['question']
         answer     = sample['captions']
 
-        video_path = os.path.join(self..folder, video_name)
+        video_path = os.path.join(self.folder, video_name)
         video_tensor = self.processor(video_path)
 
         return {
@@ -80,7 +82,7 @@ def run_inference(args):
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     # Iterate over each sample in the ground truth file
-    for idx, (video_tensors, video_names, questions, question_ids, answers) in enumerate(tqdm(gt_questions)):
+    for idx, (video_tensors, video_names, questions, answers) in enumerate(tqdm(dataloader)):
         video_tensor = video_tensors[0]
         video_name   = video_names[0]
         question     = questions[0]
