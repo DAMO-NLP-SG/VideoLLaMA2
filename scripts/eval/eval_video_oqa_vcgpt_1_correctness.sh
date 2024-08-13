@@ -1,9 +1,9 @@
 set -x
 
-EVAL_DATA_DIR=dataset/videollm_eval
-OUTPUT_DIR=eval
-CKPT_NAME=VideoLLaMA2-7B
-CKPT=DAMO-NLP-SG/${CKPT_NAME}
+EVAL_DATA_DIR=eval
+OUTPUT_DIR=eval_output
+CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"
@@ -18,7 +18,7 @@ if [ ! -f "$output_file" ]; then
     for IDX in $(seq 0 $((CHUNKS-1))); do
         # select the GPUs for the task
         gpu_devices=$(IFS=,; echo "${GPULIST[*]:$(($IDX*$GPUS_PER_TASK)):$GPUS_PER_TASK}")
-        TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/new_eval/inference_video_oqa_vcgpt_general.py \
+        TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_video_oqa_vcgpt_general.py \
             --model-path ${CKPT} \
             --video-folder ${EVAL_DATA_DIR}/videochatgpt_gen/Test_Videos \
             --question-file ${EVAL_DATA_DIR}/videochatgpt_gen/generic_qa.json \
@@ -48,7 +48,7 @@ AZURE_API_KEY=your_key
 AZURE_API_ENDPOINT=your_endpoint
 AZURE_API_DEPLOYNAME=your_deployname
 
-python3 videollama2/new_eval/eval_video_oqa_vcgpt_1_correctness.py \
+python3 videollama2/eval/eval_video_oqa_vcgpt_1_correctness.py \
     --pred-path ${output_file} \
     --output-dir ${OUTPUT_DIR}/videochatgpt_gen/answers/correctness/${CKPT_NAME}/gpt \
     --output-json ${OUTPUT_DIR}/videochatgpt_gen/answers/correctness/${CKPT_NAME}/results.json \

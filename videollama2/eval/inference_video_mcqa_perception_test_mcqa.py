@@ -12,7 +12,8 @@ from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 
 def split_list(lst, n):
@@ -83,14 +84,16 @@ def collate_fn(batch):
 
 
 def run_inference(args):
-    model, processor, tokenizer, version = model_init(args.model_path)
+    disable_torch_init()
+
+    model, processor, tokenizer = model_init(args.model_path)
 
     questions = json.load(open(args.question_file, "r"))
     questions = list(questions.values())
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
 
     assert args.batch_size == 1, "Batch size must be 1 for inference"
-    dataset = PerceptionTestMCQADataset(questions, processor)
+    dataset = PerceptionTestMCQADataset(questions, processor['video'])
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     answer_file = os.path.expanduser(args.answer_file)
@@ -113,19 +116,20 @@ def run_inference(args):
             question_id = question_ids[idx]
             _options = options[idx]
 
-            output = x_infer(
+            output = mm_infer(
                 video_tensor,
                 instruct,
-                mode='vanilla',
                 model=model,
                 tokenizer=tokenizer,
+                modal='video',
                 do_sample=False,
-                version=version,
             )
 
+            output = output.replace('answer', '')
+            output = output.replace('Answer', '')
             pred_answer = re.findall('\(*[A-C]\)*', output)
             try:
-                assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(video_id, instruct + '\n' + output)
+                assert len(pred_answer) >= 1, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(video_id, instruct, output)
                 pred_answer = pred_answer[0].strip()
                 # if not pred_answer.startswith('('):
                 pred_answer = pred_answer.strip('()')

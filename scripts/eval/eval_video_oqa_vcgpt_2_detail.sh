@@ -1,9 +1,9 @@
 set -x
 
-EVAL_DATA_DIR=dataset/videollm_eval
-OUTPUT_DIR=eval
-CKPT_NAME=VideoLLaMA2-7B
-CKPT=DAMO-NLP-SG/${CKPT_NAME}
+EVAL_DATA_DIR=eval
+OUTPUT_DIR=eval_output
+CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"
@@ -48,11 +48,11 @@ AZURE_API_KEY=your_key
 AZURE_API_ENDPOINT=your_endpoint
 AZURE_API_DEPLOYNAME=your_deployname
 
-python3 videollama2/eval/eval_benchmark_2_detailed_orientation.py \
+python3 videollama2/eval/eval_video_oqa_vcgpt_2_detailed_orientation.py \
     --pred-path ${output_file} \
     --output-dir ${OUTPUT_DIR}/videochatgpt_gen/answers/detail/${CKPT_NAME}/gpt \
     --output-json ${OUTPUT_DIR}/videochatgpt_gen/answers/detail/${CKPT_NAME}/results.json \
-    --api-key "35632dae7dd94d0a93338db373c63893" \
-    --api-endpoint https://damo-openai-gpt4v-test.openai.azure.com \
-    --api-deployname gpt-35-turbo \
+    --api-key $AZURE_API_KEY \
+    --api-endpoint $AZURE_API_ENDPOINT \
+    --api-deployname $AZURE_API_DEPLOYNAME \
     --num-tasks 4

@@ -11,7 +11,8 @@ from torch.utils.data import Dataset, DataLoader
 
 import sys
 sys.path.append('./')
-from videollama2 import model_init, x_infer
+from videollama2 import model_init, mm_infer
+from videollama2.utils import disable_torch_init
 
 # NOTE: Ignore TypedStorage warning, which refers to this link~(https://github.com/pytorch/pytorch/issues/97207#issuecomment-1494781560)
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -61,7 +62,7 @@ class EgoschemaDataset(Dataset):
         axs = [a0, a1, a2, a3, a4]
         ops = ['(A)', '(B)', '(C)', '(D)', '(E)']
 
-        instruct = f'Question: {question}\nOptions:\n(A) {a0}\n(B) {a1}\n(C) {a2}\n(D) {a3}\n(E) {a4}\nAnswer with the option\'s letter from the given choices directly and only give the best option.' 
+        instruct = f'Select the best answer to the following multiple-choice question based on the video.\n{question}\nOptions:\n(A) {a0}\n(B) {a1}\n(C) {a2}\n(D) {a3}\n(E) {a4}\nAnswer with the option\'s letter from the given choices directly and only give the best option. The best answer is: ' 
 
         return {
             'q_uid': q_uid,
@@ -85,9 +86,12 @@ def egoschema_dump(ans_file, line, outputs):
         instruct = line['instruct'][idx]
         letters = ['A', 'B', 'C', 'D', 'E']
 
+        output = output.replace('answer', '')
+        output = output.replace('Answer', '')
         pred_answer = re.findall('[\(\ ]*[A-E][\)\ ]*', output)
         try:
-            assert len(pred_answer) >= 1, 'The video \"{}\" output \"{}\" is not in the expected format'.format(line['q_uid'], instruct + '\n' + output)
+            
+            assert len(pred_answer) >= 1, 'The video \"{}\" instruct: \n\"{}\"\n output: \n\"{}\"\n is not in the expected format'.format(line['q_uid'], instruct, output)
             pred_answer = pred_answer[0].strip()
             pred_answer = pred_answer.strip('()')
             pred_idx = letters.index(pred_answer)
@@ -99,28 +103,33 @@ def egoschema_dump(ans_file, line, outputs):
 
 
 def run_inference(args):
-    model, processor, tokenizer, version = model_init(args.model_path)
+    disable_torch_init()
+
+    model, processor, tokenizer = model_init(args.model_path)
 
     answer_file = os.path.expanduser(args.answer_file)
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
     ans_file = open(answer_file, "w")
 
-    val_loader = build_egoschema_eval(args, processor)
+    val_loader = build_egoschema_eval(args, processor['video'])
 
     # Iterate over each sample in the ground truth file
     for i, line in enumerate(tqdm(val_loader)):
         video_tensor = line['video'][0]
         instruct = line['instruct'][0]
 
-        pred = x_infer(
-            video_tensor,
-            instruct,
-            mode='vanilla',
-            model=model,
-            tokenizer=tokenizer,
-            do_sample=False,
-            version=version,
-        )
+        try:
+            pred = mm_infer(
+                video_tensor,
+                instruct,
+                model=model,
+                tokenizer=tokenizer,
+                modal='video',
+                do_sample=False,
+            )
+        except:
+            traceback.print_exc()
+            pred = 'C'
 
         egoschema_dump(ans_file, line, [pred])
 

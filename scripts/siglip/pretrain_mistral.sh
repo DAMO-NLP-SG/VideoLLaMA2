@@ -25,11 +25,12 @@ echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 GLOBAL_BATCH_SIZE=256
 LOCAL_BATCH_SIZE=8
 GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$LOCAL_BATCH_SIZE)]
+echo $GRADIENT_ACCUMULATION_STEPS
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2_vllava
-RUN_NAME=videollama2_stp_vllava
+export WANDB_PROJECT=videollama2mistral_siglip
+RUN_NAME=vllava_settings
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 
@@ -40,16 +41,14 @@ torchrun --nnodes $WORLD_SIZE \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
     --deepspeed scripts/zero3.json \
-    --version plain \
-    --vision_tower openai/clip-vit-large-patch14-336 \
-    --mm_projector_type stp_connector \
+    --model_type videollama2 \
+    --model_path mistralai/Mistral-7B-Instruct-v0.2 \
+    --vision_tower google/siglip-so400m-patch14-384 \
+    --mm_projector_type stc_connector_v35 \
     --tune_mm_mlp_adapter True \
-    --model_name_or_path mistralai/Mistral-7B-Instruct-v0.2 \
     --data_path   ${DATA_DIR}/videollava_pt/valley_llavaimage.json \
     --data_folder ${DATA_DIR}/videollava_pt/ \
     --mm_vision_select_layer -2 \
-    --mm_use_im_start_end False \
-    --mm_use_im_patch_token False \
     --num_frames 8 \
     --bf16 True \
     --tf32 True \
@@ -70,7 +69,7 @@ torchrun --nnodes $WORLD_SIZE \
     --logging_steps 1 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
-    --dataloader_num_workers 4 \
+    --dataloader_num_workers 16 \
     --lazy_preprocess True \
     --report_to tensorboard \
-    --run_name $RUN_NAME \
+    --run_name pretrain_$RUN_NAME \
