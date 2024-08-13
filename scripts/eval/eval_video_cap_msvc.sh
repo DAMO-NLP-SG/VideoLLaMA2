@@ -12,11 +12,11 @@ IFS=',' read -ra GPULIST <<< "$gpu_list"
 GPUS_PER_TASK=1
 CHUNKS=$((${#GPULIST[@]}/$GPUS_PER_TASK))
 
-output_file=${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/merge.json
+output_file=${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/merge.json
 
 # judge if the number of json lines is 0
 if [ ! -f "$output_file" ] || [ $(cat "$output_file" | wc -l) -eq 0 ]; then
-    rm -f ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/*.json
+    rm -f ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/*.json
 fi
 
 if [ ! -f "$output_file" ]; then
@@ -25,9 +25,9 @@ if [ ! -f "$output_file" ]; then
         gpu_devices=$(IFS=,; echo "${GPULIST[*]:$(($IDX*$GPUS_PER_TASK)):$GPUS_PER_TASK}")
         TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_video_cap_msvc.py \
           --model-path ${CKPT} \
-          --video-folder ${EVAL_DATA_DIR}/MSVC \
-          --question-file ${EVAL_DATA_DIR}/MSVC/msvc.json \
-          --output-file ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
+          --video-folder ${EVAL_DATA_DIR}/msvc \
+          --question-file ${EVAL_DATA_DIR}/msvc/msvc.json \
+          --output-file ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
           --num-chunks $CHUNKS \
           --chunk-idx $IDX &
     done
@@ -39,28 +39,28 @@ if [ ! -f "$output_file" ]; then
 
     #Loop through the indices and concatenate each file.
     for IDX in $(seq 0 $((CHUNKS-1))); do
-        cat ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json >> "$output_file"
+        cat ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json >> "$output_file"
     done
 fi
 
 
-AZURE_API_KEY=""
-AZURE_API_ENDPOINT=""
-AZURE_API_DEPLOYNAME=""
+AZURE_API_KEY=your_key
+AZURE_API_ENDPOINT=your_endpoint
+AZURE_API_DEPLOYNAME=your_deployname
 
-python3 videollama2/new_eval/eval_video_cap_msvc_correctness.py \
+python3 videollama2/eval/eval_video_cap_msvc_correctness.py \
     --pred-path $output_file \
-    --output-dir ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/correctness_gpt \
-    --output-json ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/correctness_results.json \
+    --output-dir ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/correctness_gpt \
+    --output-json ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/correctness_results.json \
     --api-key $AZURE_API_KEY \
     --api-endpoint $AZURE_API_ENDPOINT \
     --api-deployname $AZURE_API_DEPLOYNAME \
     --num-tasks 4 \
 
-python3 videollama2/new_eval/eval_video_cap_msvc_detailedness.py \
+python3 videollama2/eval/eval_video_cap_msvc_detailedness.py \
     --pred-path $output_file \
-    --output-dir ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/detailedness_gpt \
-    --output-json ${OUTPUT_DIR}/MSVC/answers/${CKPT_NAME}/detailedness_results.json \
+    --output-dir ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/detailedness_gpt \
+    --output-json ${OUTPUT_DIR}/msvc/answers/${CKPT_NAME}/detailedness_results.json \
     --api-key $AZURE_API_KEY \
     --api-endpoint $AZURE_API_ENDPOINT \
     --api-deployname $AZURE_API_DEPLOYNAME \

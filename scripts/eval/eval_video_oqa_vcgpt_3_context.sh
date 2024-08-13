@@ -1,7 +1,7 @@
 set -x
 
-EVAL_DATA_DIR=dataset/videollm_eval
-OUTPUT_DIR=eval
+EVAL_DATA_DIR=eval
+OUTPUT_DIR=eval_output
 CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
@@ -48,7 +48,7 @@ AZURE_API_KEY=your_key
 AZURE_API_ENDPOINT=your_endpoint
 AZURE_API_DEPLOYNAME=your_deployname
 
-python3 videollama2/eval/eval_benchmark_3_context.py \
+python3 videollama2/eval/eval_video_oqa_vcgpt_3_context.py \
     --pred-path ${output_file} \
     --output-dir ${OUTPUT_DIR}/videochatgpt_gen/answers/context/${CKPT_NAME}/gpt \
     --output-json ${OUTPUT_DIR}/videochatgpt_gen/answers/context/${CKPT_NAME}/results.json \
