@@ -19,11 +19,11 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 
 </h5>
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-egoschema-1)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-egoschema-1?p=videollama-2-advancing-spatial-temporal)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/video-question-answering-on-perception-test)](https://paperswithcode.com/sota/video-question-answering-on-perception-test?p=videollama-2-advancing-spatial-temporal)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/video-question-answering-on-mvbench)](https://paperswithcode.com/sota/video-question-answering-on-mvbench?p=videollama-2-advancing-spatial-temporal)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-video-mme-1)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-video-mme-1?p=videollama-2-advancing-spatial-temporal)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-video-mme)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-video-mme?p=videollama-2-advancing-spatial-temporal)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-egoschema-1)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-egoschema-1?p=videollama-2-advancing-spatial-temporal) <br>
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/video-question-answering-on-perception-test)](https://paperswithcode.com/sota/video-question-answering-on-perception-test?p=videollama-2-advancing-spatial-temporal) <br>
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/video-question-answering-on-mvbench)](https://paperswithcode.com/sota/video-question-answering-on-mvbench?p=videollama-2-advancing-spatial-temporal) <br>
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-video-mme-1)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-video-mme-1?p=videollama-2-advancing-spatial-temporal) <br>
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/videollama-2-advancing-spatial-temporal/zero-shot-video-question-answer-on-video-mme)](https://paperswithcode.com/sota/zero-shot-video-question-answer-on-video-mme?p=videollama-2-advancing-spatial-temporal) <br>
 
 <details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
 <!--  may -->
