@@ -278,7 +278,7 @@ def inference():
     disable_torch_init()
 
     # Video Inference
-    modal = 'videp'
+    modal = 'video'
     modal_path = 'assets/cat_and_chicken.mp4' 
     instruct = 'What animals are in the video, what are they doing, and how does the video feel?'
     # Reply:
