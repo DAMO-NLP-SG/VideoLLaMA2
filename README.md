@@ -80,11 +80,12 @@ pip install flash-attn==2.5.8 --no-build-isolation
 ## 🚀 Main Results
 
 ### Multi-Choice Video QA & Video Captioning
-<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/9cc4a5ae-d850-4eef-bd51-83688b94698e" width="800" "/></p>
-
+<p><img src="https://github.com/user-attachments/assets/fbe3e3c2-b0f1-4e29-8b92-bc3611192909" width="800" "/></p>
 
 ###  Open-Ended Video QA
-<p><img src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/2ed7aa53-db56-4829-8375-85aefbc5120a" width="800" "/></p>
+<p><img src="https://github.com/user-attachments/assets/cee2efe1-309e-4301-a217-e2a848799953" width="800" "/></p>
+
+
 
 ## :earth_americas: Model Zoo
 | Model Name     | Model Type | Visual Encoder | Language Decoder | # Training Frames |
@@ -95,6 +96,8 @@ pip install flash-attn==2.5.8 --no-build-isolation
 | [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F)  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 16 |
 | [VideoLLaMA2-8x7B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B-Base)  | Base | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mixtral-8x7B-Instruct-v0.1](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)  | 8 |
 | [VideoLLaMA2-8x7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B)  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mixtral-8x7B-Instruct-v0.1](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)  | 8 |
+| [VideoLLaMA2-72B-Base]()  | Base | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Qwen2-72B-Instruct](https://huggingface.co/Qwen/Qwen2-72B-Instruct)  | 8 |
+| [VideoLLaMA2-72B]()  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Qwen2-72B-Instruct](https://huggingface.co/Qwen/Qwen2-72B-Instruct)  | 8 |
 
 
 ## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
