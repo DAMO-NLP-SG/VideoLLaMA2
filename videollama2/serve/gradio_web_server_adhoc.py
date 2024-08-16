@@ -129,20 +129,26 @@ def generate(image, video, message, chatbot, textbox_in, temperature, top_p, max
         one_turn_chat[0] += "\n" + show_images
     # 2. not first run case
     else:
-        previous_image = re.findall(r'<img src="./file=(.+?)"', chatbot[0][0])
-        previous_video = re.findall(r'<video controls playsinline width="500" style="display: inline-block;"  src="./file=(.+?)"', chatbot[0][0])
-        if len(previous_image) > 0:
-            previous_image = previous_image[0]
-            # 2.1 new image append or pure text input will start a new conversation
-            if image is not None and os.path.basename(previous_image) != os.path.basename(image):
-                message.clear()
-                one_turn_chat[0] += "\n" + show_images
-        elif len(previous_video) > 0:
-            previous_video = previous_video[0]
-            # 2.2 new video append or pure text input will start a new conversation
-            if video is not None and os.path.basename(previous_video) != os.path.basename(video):
-                message.clear()
-                one_turn_chat[0] += "\n" + show_images
+        # scanning the last image or video
+        length = len(chatbot)
+        for i in range(length - 1, -1, -1):
+            previous_image = re.findall(r'<img src="./file=(.+?)"', chatbot[i][0])
+            previous_video = re.findall(r'<video controls playsinline width="500" style="display: inline-block;"  src="./file=(.+?)"', chatbot[i][0])
+
+            if len(previous_image) > 0:
+                previous_image = previous_image[-1]
+                # 2.1 new image append or pure text input will start a new conversation
+                if (video is not None) or (image is not None and os.path.basename(previous_image) != os.path.basename(image)):
+                    message.clear()
+                    one_turn_chat[0] += "\n" + show_images
+                break
+            elif len(previous_video) > 0:
+                previous_video = previous_video[-1]
+                # 2.2 new video append or pure text input will start a new conversation
+                if image is not None or (video is not None and os.path.basename(previous_video) != os.path.basename(video)):
+                    message.clear()
+                    one_turn_chat[0] += "\n" + show_images
+                break
 
     message.append({'role': 'user', 'content': textbox_in})
     text_en_out = handler.generate(data, message, temperature=temperature, top_p=top_p, max_output_tokens=max_output_tokens)
