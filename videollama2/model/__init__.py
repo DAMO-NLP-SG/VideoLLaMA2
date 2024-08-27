@@ -98,10 +98,10 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         model_base = model_base if model_base is not None else cfg_pretrained._name_or_path
 
         # NOTE: remove qlora training quantization config 
-        if hasattr(lora_cfg_pretrained, 'quantization_config'):
-            del lora_cfg_pretrained.quantization_config
+        if hasattr(config, 'quantization_config'):
+            del config.quantization_config
         tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False, token=token)
-        print('Loading VideoLLaMA from base model...')
+        print('Loading VideoLLaMA lora model...')
 
         if 'vicuna' in model_base.lower():
             model = Videollama2LlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=config, **kwargs)
@@ -139,7 +139,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         print('Merging LoRA weights...')
         model = model.merge_and_unload()
         print('Model is loaded...')
-    elif model_base is not None or '-base' in model_name.lower() or is_pretraining:
+    elif model_base is not None or is_pretraining:
         # NOTE: Base/Pretrain model loading
         print('Loading VideoLLaMA 2 from base model...')
         cfg_pretrained = PretrainedConfig.from_pretrained(model_path, token=token)
