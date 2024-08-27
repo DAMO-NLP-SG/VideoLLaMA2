@@ -43,7 +43,7 @@ torchrun --nnodes $WORLD_SIZE \
     --model_type videollama2 \
     --model_path mistralai/Mistral-7B-Instruct-v0.2 \
     --vision_tower openai/clip-vit-large-patch14-336 \
-    --mm_projector_type stc_connector \
+    --mm_projector_type stc_connector_v35 \
     --pretrain_mm_mlp_adapter ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME}/mm_projector.bin \
     --data_path   ${DATA_DIR}/videollava_sft/videochatgpt_llavaimage_tune.json \
     --data_folder ${DATA_DIR}/videollava_sft/ \
