@@ -37,3 +37,4 @@ fastapi
 tensorboard
 wandb
 tabulate
+spaces==0.29.2
