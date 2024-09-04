@@ -49,6 +49,7 @@ class ActivitynetDataset(Dataset):
         question_id = sample['question_id']
         answer      = answer['answer']
 
+        video_path = None
         for fmt in self.video_formats:  # Added this line
             temp_path = os.path.join(args.video_folder, f"v_{video_name}{fmt}")
             if os.path.exists(temp_path):
@@ -59,6 +60,9 @@ class ActivitynetDataset(Dataset):
             if os.path.exists(temp_path):
                 video_path = temp_path
                 break
+
+        if video_path is None:
+            raise FileNotFoundError(f"Video file not found for {os.path.join(args.video_folder, video_name)}")
 
         video_tensor = self.processor(video_path)
 
