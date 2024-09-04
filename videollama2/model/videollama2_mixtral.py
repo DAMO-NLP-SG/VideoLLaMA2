@@ -72,7 +72,6 @@ class Videollama2MixtralForCausalLM(MixtralForCausalLM, Videollama2MetaForCausal
         output_hidden_states: Optional[bool] = None,
         images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
-        cache_position: Optional[int] = None,
         **kwargs
     ) -> Union[Tuple, CausalLMOutputWithPast]:
 
@@ -101,7 +100,6 @@ class Videollama2MixtralForCausalLM(MixtralForCausalLM, Videollama2MetaForCausal
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
-            cache_position=cache_position,
         )
 
     @torch.no_grad()
