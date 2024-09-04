@@ -431,10 +431,7 @@ def train(attn_implementation=None):
         ))
 
     config = VLLMConfigs[model_args.model_type].from_pretrained(model_args.model_path, trust_remote_code=True)
-    if 'gemma2' in model_args.model_type:
-        config._attn_implementation = 'eager'
-    else:
-        config._attn_implementation = attn_implementation
+    config._attn_implementation = attn_implementation
 
     if model_args.vision_tower is not None:
         model = VLLMs[model_args.model_type].from_pretrained(
