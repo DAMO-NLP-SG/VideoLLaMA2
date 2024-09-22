@@ -7,7 +7,7 @@ from transformers import (
     CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig,
     SiglipVisionModel, SiglipImageProcessor, SiglipVisionConfig
 )
-
+from .beats.BEATs import BEATsConfig, BEATs
 
 class CLIPVisionTower(nn.Module):
 
@@ -177,12 +177,35 @@ class SiglipVisionTower(nn.Module):
 
 def build_vision_tower(vision_tower_cfg, **kwargs):
     vision_tower = getattr(vision_tower_cfg, 'mm_vision_tower', getattr(vision_tower_cfg, 'vision_tower', None))
-
     if  'clip' in vision_tower:
         vision_tower = CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
     elif 'siglip' in vision_tower:
         vision_tower = SiglipVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
     else:
         raise ValueError(f'Unknown vision tower: {vision_tower}')
-
+    #print(vision_tower)
     return vision_tower
+
+def build_audio_tower(audio_tower_cfg, delay_load=False, **kwargs):
+    audio_tower = getattr(audio_tower_cfg, 'mm_audio_tower', getattr(audio_tower_cfg, 'audio_tower', None))
+    if not delay_load:
+        beats_checkpoint = torch.load(audio_tower, map_location='cpu')
+        if 'cfg' in beats_checkpoint:
+            beats_cfg = BEATsConfig(beats_checkpoint['cfg'])
+        else:
+            beats_cfg = BEATsConfig()
+        beats = BEATs(beats_cfg)
+        if not audio_tower.endswith('.bin'):
+            print(beats.load_state_dict(beats_checkpoint['model']))
+        else:
+            filtered_checkpoint = {}
+            prefix = 'model.audio_tower.'
+            for key, value in beats_checkpoint.items():
+                if key.startswith(prefix):
+                    new_key = key[len(prefix):]  # 去除前缀
+                    filtered_checkpoint[new_key] = value
+            print(beats.load_state_dict(filtered_checkpoint, strict=False))
+    else:
+        beats_cfg = BEATsConfig()
+        beats = BEATs(beats_cfg)
+    return beats, beats_cfg

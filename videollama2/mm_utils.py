@@ -15,7 +15,14 @@ from moviepy.editor import VideoFileClip
 from transformers import StoppingCriteria
 
 from .constants import NUM_FRAMES, MAX_FRAMES, NUM_FRAMES_PER_SECOND, MODAL_INDEX_MAP, DEFAULT_IMAGE_TOKEN
-
+from moviepy.editor import VideoFileClip
+import random
+import librosa
+import soundfile as sf
+import torchaudio.compliance.kaldi as ta_kaldi
+from subprocess import CalledProcessError, run, Popen, PIPE
+import math
+from pytorchvideo.data.clip_sampling import ConstantClipsPerVideoSampler
 
 def chunk_list(input_list, chunk_size):
     return [input_list[i:i + chunk_size] for i in range(0, len(input_list), chunk_size)]
@@ -130,7 +137,110 @@ def frame_sample(duration, mode='uniform', num_frames=None, fps=None):
         raise ImportError(f'Unsupported frame sampling mode: {mode}')
 
 
-def process_video(video_path, processor, s=None, e=None, aspect_ratio='pad', num_frames=NUM_FRAMES):
+def process_audio_file(wav_path):
+    # read wav
+    #print(wav_path)
+    wav, sr = sf.read(wav_path)
+    if len(wav.shape) == 2:
+        wav = wav[:, 0]
+    if len(wav) > 30 * sr:
+        max_start = len(wav) - 30 * sr
+        start = random.randint(0, max_start)
+        wav = wav[start: start + 30 * sr]
+    if len(wav) < 30 * sr:
+        pad_length = 30 * sr - len(wav)
+        wav = np.pad(wav, (0, pad_length), mode='constant', constant_values=0.0)
+    if sr != 16000:
+        wav = librosa.resample(wav, orig_sr=sr, target_sr=16000, res_type="fft")
+
+    # beats
+    raw_wav = torch.from_numpy(wav).to('cpu')
+    waveform = raw_wav.unsqueeze(0) * 2 ** 15
+    fbank = ta_kaldi.fbank(waveform, num_mel_bins=128, sample_frequency=16000, frame_length=25, frame_shift=10).to(torch.bfloat16)
+    return fbank.unsqueeze(0)
+
+def get_clip_timepoints(clip_sampler, duration):
+    # Read out all clips in this video
+    all_clips_timepoints = []
+    is_last_clip = False
+    end = 0.0
+    while not is_last_clip:
+        start, end, _, _, is_last_clip = clip_sampler(end, duration, annotation=None)
+        all_clips_timepoints.append((start, end))
+        #print(int(start))
+        #print(int(end))
+        #print("AAAA")
+    return all_clips_timepoints
+
+def load_audio_from_video(file: str, sr: int = 16000):
+    """
+    Open an audio file and read as mono waveform, resampling as necessary
+
+    Parameters
+    ----------
+    file: str
+        The audio file to open
+
+    sr: int
+        The sample rate to resample the audio if necessary
+
+    Returns
+    -------
+    A NumPy array containing the audio waveform, in float32 dtype.
+    """
+
+    # This launches a subprocess to decode audio while down-mixing
+    # and resampling as necessary.  Requires the ffmpeg CLI in PATH.
+
+    cmd = ["ffmpeg", "-nostdin", "-i", file, "-vn",  # no video
+        "-acodec", "pcm_s16le",  # output audio codec (pcm_s16le for .wav)
+        "-ac", "1",  # audio channels (1 for mono)
+        "-ar", str(sr),  # audio sample rate
+        "-f", "s16le",  # output format (s16le for 16-bit PCM)
+        "-"  # output to stdout
+        ]
+    # fmt: on
+    try:
+        out = run(cmd, capture_output=True, check=True).stdout
+    except CalledProcessError as e:
+        raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
+    return np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0, sr
+
+
+def process_audio_from_video(audio_path, clip_duration, device="cpu", num_mel_bins=128, sample_rate=16000, clips_per_video=8, mean=-4.268, std=9.138):
+    clip_sampler = ConstantClipsPerVideoSampler(
+        clip_duration=2, clips_per_video=clips_per_video
+    )
+    try:
+        waveform, sr = load_audio_from_video(audio_path)
+        #print(audio_path)
+    except Exception as audio_error:
+        print(f"Failed to process audio from video due to error: {audio_error}")
+        waveform = torch.zeros(480000)
+        waveform = waveform.numpy()
+        sr = 16000
+    all_clips_timepoints = get_clip_timepoints(clip_sampler, waveform.shape[0] / sample_rate)
+    all_clips = []
+    for clip_timepoints in all_clips_timepoints:
+        waveform_clip = waveform[
+            int(clip_timepoints[0] * sample_rate) : int(
+                clip_timepoints[1] * sample_rate)]
+        all_clips.append(waveform_clip)
+    all_clips_tensors = [torch.from_numpy(clip) for clip in all_clips]
+    wav = torch.cat(all_clips_tensors, dim=0)
+    if len(wav) > 30 * sr:
+        max_start = len(wav) - 30 * sr
+        start = torch.randint(0, max_start, (1,)).item()
+        wav = wav[start: start + 30 * sr]
+    if len(wav) < 30 * sr:
+        pad_length = 30 * sr - len(wav)
+        wav = torch.nn.functional.pad(wav, (0, pad_length), mode='constant', value=0.0)
+    waveform = wav.unsqueeze(0) * 2 ** 15
+    fbank = ta_kaldi.fbank(waveform, num_mel_bins=128, sample_frequency=16000, frame_length=25, frame_shift=10).to(torch.bfloat16)
+    return fbank.unsqueeze(0)
+
+
+def process_video(video_path, processor, s=None, e=None, aspect_ratio='pad', num_frames=NUM_FRAMES, va=False):
     if isinstance(video_path, str):
         if s is not None and e is not None:
             s = s if s >= 0. else 0.
@@ -200,8 +310,14 @@ def process_video(video_path, processor, s=None, e=None, aspect_ratio='pad', num
     else:
         images = [f for f in video_data]
         video = processor.preprocess(images, return_tensors='pt')['pixel_values']
-    return video
 
+    if va:
+        # Calculate the duration of the video in seconds
+        video_duration_seconds = num_frames_of_video / fps
+        audio = process_audio_from_video(video_path, video_duration_seconds)
+        video = {'video': video, 'audio': audio}
+        
+    return video
 
 def process_video_old(video_path, processor, aspect_ratio='pad', num_frames=NUM_FRAMES, image_grid=False, sample_scheme='uniform'):
     def frame_sample(duration, mode='uniform', local_fps=None):

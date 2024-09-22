@@ -20,8 +20,8 @@ import einops
 import torch
 import torch.nn as nn
 
-from .projector import load_mm_projector, build_vision_projector
-from .encoder import build_vision_tower
+from .projector import load_mm_projector, build_vision_projector, build_audio_projector
+from .encoder import build_vision_tower, build_audio_tower
 from ..constants import IGNORE_INDEX, NUM_FRAMES, MODAL_INDEX_MAP
 
 
@@ -33,12 +33,21 @@ class Videollama2MetaModel:
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
             self.mm_projector = build_vision_projector(config)
+        if hasattr(config, "mm_audio_tower"):
+            self.audio_tower, audio_tower_cfg = build_audio_tower(config, delay_load=True)
+            self.mm_projector_a = build_audio_projector(config)
 
     def get_vision_tower(self):
         vision_tower = getattr(self, 'vision_tower', None)
         if type(vision_tower) is list:
             vision_tower = vision_tower[0]
         return vision_tower
+
+    def get_audio_tower(self):
+        audio_tower = getattr(self, 'audio_tower', None)
+        if type(audio_tower) is list:
+            audio_tower = audio_tower[0]
+        return audio_tower
 
     def initialize_vision_modules(self, model_args, fsdp=None):
         vision_tower = model_args.vision_tower
@@ -97,6 +106,38 @@ class Videollama2MetaModel:
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'), strict=False)
 
 
+    def initialize_audio_modules(self, model_args, fsdp=None):
+        audio_tower = model_args.audio_tower
+        pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter_a
+        self.config.mm_audio_tower = audio_tower
+        if self.get_audio_tower() is None:
+            audio_tower, audio_tower_cfg = build_audio_tower(model_args)
+            if fsdp is not None and len(fsdp) > 0:
+                self.audio_tower = [audio_tower]
+            else:
+                self.audio_tower = audio_tower
+        else:
+            if fsdp is not None and len(fsdp) > 0:
+                audio_tower = self.audio_tower[0]
+            else:
+                audio_tower = self.audio_tower
+        self.config.use_mm_proj = True
+        self.config.mm_projector_a_type = getattr(model_args, 'mm_projector_a_type', 'linear')
+        self.config.mm_hidden_size_a = audio_tower_cfg.encoder_embed_dim
+        self.config.hidden_size_a = audio_tower_cfg.hidden_size
+        if getattr(self, 'mm_projector_a', None) is None:
+            self.mm_projector_a = build_audio_projector(self.config)
+        else:
+            # In case it is frozen by LoRA
+            for p in self.mm_projector_a.parameters():
+                p.requires_grad = True
+        if pretrain_mm_mlp_adapter is not None:
+            mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
+            def get_w(weights, keyword):
+                return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
+            self.mm_projector_a.load_state_dict(get_w(mm_projector_weights, 'mm_projector_a'), strict=True)
+
+
 class Videollama2MetaForCausalLM(ABC):
 
     @abstractmethod
@@ -111,6 +152,9 @@ class Videollama2MetaForCausalLM(ABC):
 
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
+
+    def get_audio_tower(self):
+        return self.get_model().get_audio_tower()
 
     def encode_images_or_videos(self, images):
         num_frames = self.config.num_frames if hasattr(self.config, 'num_frames') else NUM_FRAMES
@@ -163,13 +207,80 @@ class Videollama2MetaForCausalLM(ABC):
         self, input_ids, attention_mask, past_key_values, labels, images
     ):
         vision_tower = self.get_vision_tower()
+        audio_tower = self.get_audio_tower()
         # NOTE: text-only situation
-        if vision_tower is None or images is None or input_ids.shape[1] == 1:
+        if (vision_tower is None and audio_tower is None) or images is None or input_ids.shape[1] == 1:
             # if past_key_values is not None and vision_tower is not None and Xs is not None and input_ids.shape[1] == 1:
             #    attention_mask = torch.ones((attention_mask.shape[0], past_key_values[-1][-1].shape[-2] + 1), dtype=attention_mask.dtype, device=attention_mask.device)
             return input_ids, attention_mask, past_key_values, None, labels
+        if audio_tower is None:
+            mm_features = self.encode_images_or_videos(images)
+        elif audio_tower is not None and vision_tower is not None and any(modal == 'video' for (_, modal) in images):
+            # [tensor, "image"]
+            # [tensor, "audio"]
+            # [tensor, "video"]
+            # [dict(”, audio), "video"]
 
-        mm_features = self.encode_images_or_videos(images)
+            X_video = []
+            X_audio = []
+
+            select_audio_id = [] 
+            select_videoimage_id = []
+            for idx, data_list in enumerate(images):
+                #print(data_list)
+                if isinstance(data_list[0], dict):
+                    assert data_list[1] == "video"
+                    X_audio.append(data_list[0]["audio"])
+                    select_audio_id.append(True)
+                    X_video.append((data_list[0]["video"], "video"))
+                    select_videoimage_id.append(True)
+                else:
+                    if data_list[1] == "audio":
+                        X_audio.append(data_list[0])
+                        select_audio_id.append(True)
+                        select_videoimage_id.append(False)
+                    elif data_list[1] == "video" or data_list[1] == "image":
+                        X_video.append(data_list)
+                        select_videoimage_id.append(True)
+                        select_audio_id.append(False)
+                    else:
+                        raise NotImplementedError
+
+            if len(X_audio) > 0:
+                Xa_features = torch.cat(X_audio, dim=0)
+                audio_padding_mask = torch.zeros(Xa_features.shape, device=self.device).bool()
+                audio_embedding, T, F = self.get_model().get_audio_tower().extract_features(Xa_features, padding_mask=audio_padding_mask, feature_only=True)
+                Xa_features = self.get_model().mm_projector_a(audio_embedding)
+                Xa_features = Xa_features.view(len(X_audio), -1, Xa_features.shape[-1])
+
+            if len(X_video) > 0:
+                X_features = self.encode_images_or_videos(X_video)
+
+            mm_features = []
+            idx_a, idx_v = 0, 0
+            for audio_idx, videoimage_idx in zip(select_audio_id, select_videoimage_id):
+                if audio_idx and videoimage_idx:
+                    mm_features.append(torch.cat([X_features[idx_v], Xa_features[idx_a]], dim=0))
+                    idx_a += 1
+                    idx_v += 1
+                elif audio_idx:
+                    mm_features.append(Xa_features[idx_a])
+                    idx_a += 1
+                elif videoimage_idx:
+                    mm_features.append(X_features[idx_v])
+                    idx_v += 1
+                else:
+                    raise NotImplementedError
+        else:
+            data_batch = []
+            for i, (data, modal) in enumerate(images):
+                data_batch.append(data)
+            X_features = torch.cat(data_batch, dim=0)
+            audio_padding_mask = torch.zeros(X_features.shape, device=self.device).bool()
+            audio_embedding, T, F = self.get_model().get_audio_tower().extract_features(X_features, 
+                padding_mask=audio_padding_mask, feature_only=True)      
+            mm_features = self.get_model().mm_projector_a(audio_embedding)
+            #X_features = X_features.view(len(X_features), -1, X_features.shape[-1])
 
         new_input_embeds = []
         new_labels = [] if labels is not None else None

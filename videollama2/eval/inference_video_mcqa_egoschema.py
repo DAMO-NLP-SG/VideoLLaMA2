@@ -106,7 +106,7 @@ def run_inference(args):
     disable_torch_init()
 
     model, processor, tokenizer = model_init(args.model_path)
-
+    model.model.audio_tower = None
     answer_file = os.path.expanduser(args.answer_file)
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
     ans_file = open(answer_file, "w")
