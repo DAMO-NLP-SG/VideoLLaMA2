@@ -28,13 +28,10 @@ def get_chunk(lst, n, k):
     return chunks[k]
 
 
-class ActivitynetDataset(Dataset):
+class AVQADataset(Dataset):
 
-    video_formats = ['.mp4', '.webm', '.avi', '.mov', '.mkv']
-
-    def __init__(self, questions, answers, processor):
+    def __init__(self, questions, processor):
         self.questions = questions
-        self.answers   = answers
         self.processor = processor
 
     def __len__(self):
@@ -42,29 +39,84 @@ class ActivitynetDataset(Dataset):
     
     def __getitem__(self, idx):
         sample = self.questions[idx]
-        answer = self.answers[idx]
 
-        video_name  = sample['video_name']
-        question    = sample['question']
-        question_id = sample['question_id']
-        answer      = answer['answer']
+        video_path  = sample['video']
+        question    = sample['conversations'][0]["value"].replace("<video>", "").strip()
+        question_id = video_path.split("/")[-1]
+        answer      = sample['conversations'][1]["value"]
 
-        for fmt in self.video_formats:  # Added this line
-            temp_path = os.path.join(args.video_folder, f"v_{video_name}{fmt}")
-            if os.path.exists(temp_path):
-                video_path = temp_path
-                break
-            # BUG: compatibility for MSVD, MSRVTT, TGIF
-            temp_path = os.path.join(args.video_folder, f"{video_name}{fmt}")
-            if os.path.exists(temp_path):
-                video_path = temp_path
-                break
-
-        video_tensor = self.processor(video_path)
+        try:
+            audio_video_dict = self.processor(video_path, va=True)
+        except:
+            print("video read error")
+            audio_video_dict = None
 
         return {
-            'video':       video_tensor,
-            'video_name':  video_name,
+            'audio_video':  audio_video_dict,
+            'video_name':  video_path.split("/")[-1],
+            'question':    question,
+            'question_id': question_id,
+            'answer':      answer,
+        }
+
+class AVSDDataset(Dataset):
+
+    def __init__(self, questions, processor):
+        self.questions = questions
+        self.processor = processor
+
+    def __len__(self):
+        return len(self.questions)
+    
+    def __getitem__(self, idx):
+        sample = self.questions[idx]
+
+        video_path  = sample['video']
+        question    = sample['conversations'][0]["value"].replace("<video>", "").strip()
+        question_id = video_path.split("/")[-1]
+        answer      = sample['conversations'][1]["value"]
+
+        try:
+            audio_video_dict = self.processor(video_path, va=True)
+        except:
+            print("video read error")
+            audio_video_dict = None
+
+        return {
+            'audio_video':  audio_video_dict,
+            'video_name':  video_path.split("/")[-1],
+            'question':    question,
+            'question_id': question_id,
+            'answer':      answer,
+        }
+
+
+class AVSSDDataset(Dataset):
+
+    def __init__(self, questions, processor):
+        self.questions = questions
+        self.processor = processor
+
+    def __len__(self):
+        return len(self.questions)
+    
+    def __getitem__(self, idx):
+        sample = self.questions[idx]
+
+        video_path  = sample['video']
+        question    = "Identify the event in the video."
+        question_id = video_path.split("/")[-1]
+        answer      = sample['conversations'][1]["value"]
+
+        try:
+            audio_video_dict = self.processor(video_path, va=True)
+        except:
+            print("video read error")
+            audio_video_dict = None
+
+        return {
+            'audio_video':  audio_video_dict,
+            'video_name':  video_path.split("/")[-1],
             'question':    question,
             'question_id': question_id,
             'answer':      answer,
@@ -72,12 +124,12 @@ class ActivitynetDataset(Dataset):
 
 
 def collate_fn(batch):
-    vid  = [x['video'] for x in batch]
+    aud_vid  = [x['audio_video'] for x in batch]
     v_id = [x['video_name'] for x in batch]
     qus  = [x['question'] for x in batch]
     qid  = [x['question_id'] for x in batch]
     ans  = [x['answer'] for x in batch]
-    return vid, v_id, qus, qid, ans
+    return aud_vid, v_id, qus, qid, ans
 
 
 def run_inference(args):
@@ -88,11 +140,16 @@ def run_inference(args):
 
     gt_questions = json.load(open(args.question_file, "r"))
     gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
-    gt_answers = json.load(open(args.answer_file, "r"))
-    gt_answers = get_chunk(gt_answers, args.num_chunks, args.chunk_idx)
 
     assert args.batch_size == 1, "Batch size must be 1 for inference"
-    dataset = ActivitynetDataset(gt_questions, gt_answers, processor['video'])
+    if args.dataset == "AVQA":
+        dataset = AVQADataset(gt_questions, processor['video'])
+    elif args.dataset == "AVSD":
+        dataset = AVSDDataset(gt_questions, processor['video'])
+    elif args.dataset == "AVSSD":
+        dataset = AVSSDDataset(gt_questions, processor['video'])
+    else:
+        raise NotImplementedError
     dataloader = DataLoader(dataset, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers, collate_fn=collate_fn)
 
     answer_file = os.path.join(args.output_file)
@@ -100,18 +157,16 @@ def run_inference(args):
     ans_file = open(answer_file, "w")
 
     # Iterate over each sample in the ground truth file
-    for i, (video_tensors, video_names, questions, question_ids, answers) in enumerate(tqdm(dataloader)):
-        video_tensor = video_tensors[0]
+    for i, (aud_vid_tensors, video_names, questions, question_ids, answers) in enumerate(tqdm(dataloader)):
+        audio_video_tensor = aud_vid_tensors[0]
         video_name   = video_names[0]
         question     = questions[0]
         question_id  = question_ids[0]
         answer       = answers[0]
 
-        # question = question + '\n' + 'Answer the question using a single word or a short phrase with multiple words.'
-
         try:
             output = mm_infer(
-                video_tensor,
+                audio_video_tensor,
                 question,
                 model=model,
                 tokenizer=tokenizer,
@@ -134,13 +189,14 @@ if __name__ == "__main__":
     parser.add_argument('--model-path', help='', required=True)
     parser.add_argument('--video-folder', help='Directory containing video files.', required=True)
     parser.add_argument('--question-file', help='Path to the ground truth file containing question.', required=True)
-    parser.add_argument('--answer-file', help='Path to the ground truth file containing answers.', required=True)
+    parser.add_argument('--answer-file', help='Path to the ground truth file containing answers.', required=False)
     parser.add_argument('--output-file', help='Directory to save the model results JSON.', required=True)
     parser.add_argument("--num-chunks", type=int, default=1)
     parser.add_argument("--chunk-idx", type=int, default=0)
     parser.add_argument("--device", type=str, required=False, default='cuda:0')
     parser.add_argument("--batch-size", type=int, required=False, default=1)
     parser.add_argument("--num-workers", type=int, required=False, default=8)
+    parser.add_argument("--dataset", type=str, required=True)
     args = parser.parse_args()
 
     run_inference(args)

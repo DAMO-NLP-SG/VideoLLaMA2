@@ -110,6 +110,60 @@ def safe_save_model_for_hf_trainer(trainer: Trainer,
                 torch.save(weight_to_save, os.path.join(output_dir, f'mm_projector.bin'))
         return
 
+    elif getattr(trainer.args, "tune_mm_mlp_adapter_a", False):
+        # Only save Adapter
+        keys_to_match = ['mm_projector_a']
+        if getattr(trainer.args, "use_im_start_end", False):
+            keys_to_match.extend(['embed_tokens', 'embed_in'])
+
+        weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
+        trainer.model.config.save_pretrained(output_dir)
+
+        current_folder = output_dir.split('/')[-1]
+        parent_folder = os.path.dirname(output_dir)
+        if trainer.args.local_rank == 0 or trainer.args.local_rank == -1:
+            if current_folder.startswith('checkpoint-'):
+                mm_projector_folder = os.path.join(parent_folder, "mm_projector_a")
+                os.makedirs(mm_projector_folder, exist_ok=True)
+                torch.save(weight_to_save, os.path.join(mm_projector_folder, f'{current_folder}.bin'))
+            else:
+                torch.save(weight_to_save, os.path.join(output_dir, f'mm_projector_a.bin'))
+
+    elif getattr(trainer.args, "pretrain_mm_mlp_adapter_a", False):
+        # Only save Adapter
+        keys_to_match = ['mm_projector_a']
+        if getattr(trainer.args, "use_im_start_end", False):
+            keys_to_match.extend(['embed_tokens', 'embed_in'])
+
+        weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
+        trainer.model.config.save_pretrained(output_dir)
+
+        current_folder = output_dir.split('/')[-1]
+        parent_folder = os.path.dirname(output_dir)
+        if trainer.args.local_rank == 0 or trainer.args.local_rank == -1:
+            if current_folder.startswith('checkpoint-'):
+                mm_projector_folder = os.path.join(parent_folder, "mm_projector_a")
+                os.makedirs(mm_projector_folder, exist_ok=True)
+                torch.save(weight_to_save, os.path.join(mm_projector_folder, f'{current_folder}.bin'))
+            else:
+                torch.save(weight_to_save, os.path.join(output_dir, f'mm_projector_a.bin'))
+
+    if getattr(trainer.args, "tune_audio_tower", False):
+        # Only save Adapter
+        keys_to_match = ['audio_tower']
+        weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
+        trainer.model.config.save_pretrained(output_dir)
+
+        current_folder = output_dir.split('/')[-1]
+        parent_folder = os.path.dirname(output_dir)
+        if trainer.args.local_rank == 0 or trainer.args.local_rank == -1:
+            if current_folder.startswith('checkpoint-'):
+                mm_projector_folder = os.path.join(parent_folder, "audio_tower")
+                os.makedirs(mm_projector_folder, exist_ok=True)
+                torch.save(weight_to_save, os.path.join(mm_projector_folder, f'{current_folder}.bin'))
+            else:
+                torch.save(weight_to_save, os.path.join(output_dir, f'audio_tower.bin'))
+                
     if trainer.deepspeed:
         torch.cuda.synchronize()
         trainer.save_model(output_dir)
@@ -129,12 +183,9 @@ def split_to_even_chunks(indices, lengths, num_chunks):
     """
     Split a list of indices into `chunks` chunks of roughly equal lengths.
     """
-
     if len(indices) % num_chunks != 0:
         return [indices[i::num_chunks] for i in range(num_chunks)]
-
     num_indices_per_chunk = len(indices) // num_chunks
-
     chunks = [[] for _ in range(num_chunks)]
     chunks_lengths = [0 for _ in range(num_chunks)]
     for index in indices:
@@ -143,7 +194,6 @@ def split_to_even_chunks(indices, lengths, num_chunks):
         chunks_lengths[shortest_chunk] += lengths[index]
         if len(chunks[shortest_chunk]) == num_indices_per_chunk:
             chunks_lengths[shortest_chunk] = float("inf")
-
     return chunks
 
 
@@ -182,7 +232,6 @@ def get_length_grouped_indices(lengths, batch_size, world_size, generator=None, 
     megabatches = [indices[i : i + megabatch_size].tolist() for i in range(0, len(lengths), megabatch_size)]
     megabatches = [sorted(megabatch, key=lambda i: lengths[i], reverse=True) for megabatch in megabatches]
     megabatches = [split_to_even_chunks(megabatch, lengths, world_size) for megabatch in megabatches]
-
     return [i for megabatch in megabatches for batch in megabatch for i in batch]
 
 
@@ -220,11 +269,40 @@ class LengthGroupedSampler(Sampler):
         return iter(indices)
 
 
+class MixSampler(Sampler):
+    def __init__(self, dataset, batch_size=4):
+        self.dataset = dataset
+        self.av_count = len(dataset.av_data)
+        self.a_count = len(dataset.a_data)
+        self.v_count = len(dataset.v_data)
+        self.batch_size = batch_size
+
+    def __iter__(self): 
+        for i in range(0, self.av_count, 2):
+            if i + 1 == self.av_count:
+                break
+            batch_ids = [i, i+1]
+            
+            audio_index = i % self.a_count
+            batch_ids.append(self.av_count + audio_index)
+            video_index = i % self.v_count
+            batch_ids.append(self.av_count + self.a_count + video_index)
+
+            for x in batch_ids:
+                yield x
+
+    def __len__(self):
+        return self.av_count * 2
+
+
 class VideoLLaMA2Trainer(Trainer):
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.Sampler]:
         if self.train_dataset is None or not has_length(self.train_dataset):
             return None
+        if self.train_dataset.mix_sampler_tag:
+            assert self.args.train_batch_size % 4 == 0
+            return MixSampler(self.train_dataset, self.args.train_batch_size * self.args.gradient_accumulation_steps)
 
         if self.args.group_by_modality_length:
             lengths = self.train_dataset.modality_lengths

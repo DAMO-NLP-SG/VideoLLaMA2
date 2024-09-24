@@ -7,8 +7,8 @@ from functools import partial
 import torch
 
 from .model import load_pretrained_model
-from .mm_utils import process_image, process_video, tokenizer_multimodal_token, get_model_name_from_path, KeywordsStoppingCriteria
-from .constants import NUM_FRAMES, DEFAULT_IMAGE_TOKEN, DEFAULT_VIDEO_TOKEN, MODAL_INDEX_MAP
+from .mm_utils import process_image, process_video, tokenizer_multimodal_token, get_model_name_from_path, KeywordsStoppingCriteria, process_audio_file
+from .constants import NUM_FRAMES, DEFAULT_IMAGE_TOKEN, DEFAULT_VIDEO_TOKEN, MODAL_INDEX_MAP, DEFAULT_AUDIO_TOKEN
 
 
 def model_init(model_path=None, **kwargs):
@@ -20,10 +20,10 @@ def model_init(model_path=None, **kwargs):
         tokenizer.pad_token = tokenizer.unk_token
 
     num_frames = model.config.num_frames if hasattr(model.config, "num_frames") else NUM_FRAMES
-
     processor = {
         'image': partial(process_image, processor=processor, aspect_ratio=None),
         'video': partial(process_video, processor=processor, aspect_ratio=None, num_frames=num_frames),
+        'audio': process_audio_file,
     }
 
     return model, processor, tokenizer
@@ -50,6 +50,8 @@ def mm_infer(image_or_video, instruct, model, tokenizer, modal='video', **kwargs
         modal_token = DEFAULT_VIDEO_TOKEN
     elif modal == 'text':
         modal_token = ''
+    elif modal == 'audio':
+        modal_token = DEFAULT_AUDIO_TOKEN
     else:
         raise ValueError(f"Unsupported modal: {modal}")
 
@@ -57,7 +59,10 @@ def mm_infer(image_or_video, instruct, model, tokenizer, modal='video', **kwargs
     if modal == 'text':
         tensor = None
     else:
-        tensor = image_or_video.half().cuda()
+        if isinstance(image_or_video, dict):
+            tensor = {k: v.half().cuda() for k, v in image_or_video.items()}
+        else:
+            tensor = image_or_video.half().cuda() 
         tensor = [(tensor, modal)]
 
     # 2. text preprocess (tag process & generate prompt).

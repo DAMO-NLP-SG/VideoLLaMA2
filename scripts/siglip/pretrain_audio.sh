@@ -6,7 +6,6 @@ ARG_NPROC_PER_NODE=${2:-8}
 ARG_MASTER_ADDR="127.0.0.1"
 ARG_MASTER_PORT=16666
 ARG_RANK=0
-
 # Multiple conditions
 if [ ! -n "$WORLD_SIZE" ] || [ ! -n "$NPROC_PER_NODE" ]; then
     WORLD_SIZE=$ARG_WORLD_SIZE
@@ -28,39 +27,37 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2
-RUN_NAME=vllava_settings
+export WANDB_PROJECT=VideoLLaMA2
+RUN_NAME=videollama2qwen2_vllava
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
-
+export NPROC_PER_NODE=1
 torchrun --nnodes $WORLD_SIZE \
     --nproc_per_node $NPROC_PER_NODE  \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
-    --deepspeed scripts/zero3.json \
-    --model_type videollama2 \
-    --model_path mistralai/Mistral-7B-Instruct-v0.2 \
-    --vision_tower openai/clip-vit-large-patch14-336 \
-    --mm_projector_type stc_connector \
-    --tune_mm_mlp_adapter True \
-    --data_path   ${DATA_DIR}/videollava_pt/valley_llavaimage.json \
-    --data_folder ${DATA_DIR}/videollava_pt/ \
-    --mm_vision_select_layer -2 \
-    --num_frames 8 \
+    --deepspeed scripts/zero2.json \
+    --model_type videollama2_qwen2 \
+    --model_path /mnt/data/xyf/tmpfs_models/videollama2qwen2_finetune_7b_siglip_16f \
+    --data_path_a /mnt/data/xyf/stage1_wavcaps.json \
+    --audio_tower /mnt/data/xyf/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
+    --mm_projector_a_type mlp2x_gelu \
+    --tune_mm_mlp_adapter_a True \
+    --mm_vision_select_layer -1 \
     --bf16 True \
     --tf32 True \
     --fp16 False \
-    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME} \
+    --output_dir /mnt/data/xyf/va2/output/test \
     --num_train_epochs 1 \
-    --per_device_train_batch_size $LOCAL_BATCH_SIZE \
+    --per_device_train_batch_size 2 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
+    --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 500 \
-    --save_total_limit 99 \
+    --save_steps 1000 \
+    --save_total_limit 1 \
     --learning_rate 1e-3 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
@@ -70,5 +67,3 @@ torchrun --nnodes $WORLD_SIZE \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to tensorboard \
-    --run_name $RUN_NAME \

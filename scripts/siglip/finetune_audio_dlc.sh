@@ -22,46 +22,44 @@ echo "WORLD_SIZE: $WORLD_SIZE"
 echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 
 # Training Arguments
-GLOBAL_BATCH_SIZE=256
-LOCAL_BATCH_SIZE=8
+GLOBAL_BATCH_SIZE=128
+LOCAL_BATCH_SIZE=4
 GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$LOCAL_BATCH_SIZE)]
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2
-RUN_NAME=vllava_settings
+export WANDB_PROJECT=audio_stage2_qwen2
+RUN_NAME=audio_stage2_qwen2
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
-
 torchrun --nnodes $WORLD_SIZE \
     --nproc_per_node $NPROC_PER_NODE  \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
     videollama2/train_flash_attn.py \
-    --deepspeed scripts/zero3.json \
-    --model_type videollama2 \
-    --model_path mistralai/Mistral-7B-Instruct-v0.2 \
-    --vision_tower openai/clip-vit-large-patch14-336 \
-    --mm_projector_type stc_connector \
-    --tune_mm_mlp_adapter True \
-    --data_path   ${DATA_DIR}/videollava_pt/valley_llavaimage.json \
-    --data_folder ${DATA_DIR}/videollava_pt/ \
-    --mm_vision_select_layer -2 \
-    --num_frames 8 \
+    --deepspeed scripts/zero2.json \
+    --model_type videollama2_qwen2 \
+    --model_path /mnt/data/xyf/videollama2qwen2_finetune_7b_siglip_16f \
+    --data_path_a /mnt/data/xyf//stage2_prompt_updated.json \
+    --audio_tower /mnt/data/xyf/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
+    --pretrain_mm_mlp_adapter_a /mnt/data/xyf/va2/output/stage1_mlp_videollm_qwen2_new_beats_1024/mm_projector_a.bin \
+    --mm_projector_a_type mlp2x_gelu \
+    --tune_mm_mlp_adapter_a True \
+    --tune_audio_tower True \
     --bf16 True \
     --tf32 True \
     --fp16 False \
-    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME} \
-    --num_train_epochs 1 \
-    --per_device_train_batch_size $LOCAL_BATCH_SIZE \
+    --output_dir /mnt/data/xyf/va2/output/vlb_audio_stage2_mlp_encoder_beats_qwen2_new_videollm_ep2_64 \
+    --num_train_epochs 2 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
+    --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 500 \
-    --save_total_limit 99 \
-    --learning_rate 1e-3 \
+    --save_steps 2000 \
+    --save_total_limit 2 \
+    --learning_rate 2e-5 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
@@ -70,5 +68,4 @@ torchrun --nnodes $WORLD_SIZE \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to tensorboard \
-    --run_name $RUN_NAME \
+    --report_to wandb \

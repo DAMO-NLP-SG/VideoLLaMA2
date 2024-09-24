@@ -18,37 +18,39 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+from torch.nn import CrossEntropyLoss
 
 from transformers import AutoConfig, AutoModelForCausalLM, \
-                         LlamaConfig, LlamaModel, LlamaForCausalLM
+                         Gemma2Config, Gemma2Model, Gemma2ForCausalLM
+
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 from .videollama2_arch import Videollama2MetaModel, Videollama2MetaForCausalLM
 
 
-class Videollama2LlamaConfig(LlamaConfig):
-    model_type = "videollama2_llama"
+class Videollama2Gemma2Config(Gemma2Config):
+    model_type = "videollama2_gemma2"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model_type = "videollama2_llama"
+        self.model_type = "videollama2_gemma2"
 
 
-class Videollama2LlamaModel(Videollama2MetaModel, LlamaModel):
-    config_class = Videollama2LlamaConfig
+class Videollama2Gemma2Model(Videollama2MetaModel, Gemma2Model):
+    config_class = Videollama2Gemma2Config
 
-    def __init__(self, config: LlamaConfig):
-        super(Videollama2LlamaModel, self).__init__(config)
+    def __init__(self, config: Gemma2Config):
+        super(Videollama2Gemma2Model, self).__init__(config)
 
 
-class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
-    config_class = Videollama2LlamaConfig
+class Videollama2Gemma2ForCausalLM(Gemma2ForCausalLM, Videollama2MetaForCausalLM):
+    config_class = Videollama2Gemma2Config
 
     def __init__(self, config, **kwargs):
-        super(LlamaForCausalLM, self).__init__(config)
-        self.model = Videollama2LlamaModel(config)
-        self.pretraining_tp = config.pretraining_tp
+        super(Gemma2ForCausalLM, self).__init__(config)
+        self.model = Videollama2Gemma2Model(config)
+        # self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -71,7 +73,7 @@ class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
         output_hidden_states: Optional[bool] = None,
         images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        cache_position: Optional[int] = None,
         **kwargs
     ) -> Union[Tuple, CausalLMOutputWithPast]:
 
@@ -143,6 +145,23 @@ class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
             **kwargs
         )
 
+    def _prepare_generated_length(self, model_input_name, inputs_tensor, **kwargs):
+        if model_input_name == "inputs_embeds":
+            self.inputs_embeds_length = inputs_tensor.size(1)
+        else:
+            self.inputs_embeds_length = 0
+        return super()._prepare_generated_length(
+            model_input_name=model_input_name, 
+            inputs_tensor=inputs_tensor, 
+            **kwargs)
+
+    def _get_cache(self, cache_implementation: str, max_batch_size: int, max_cache_len: int, **kwargs):
+        return super()._get_cache(
+            cache_implementation=cache_implementation,
+            max_batch_size=max_batch_size,
+            max_cache_len=max_cache_len + self.inputs_embeds_length,
+            **kwargs)
+
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None, inputs_embeds=None, **kwargs):
         images = kwargs.pop("images", None)
         _inputs = super().prepare_inputs_for_generation(
@@ -153,5 +172,5 @@ class Videollama2LlamaForCausalLM(LlamaForCausalLM, Videollama2MetaForCausalLM):
         return _inputs
 
 
-AutoConfig.register("videollama2_llama", Videollama2LlamaConfig)
-AutoModelForCausalLM.register(Videollama2LlamaConfig, Videollama2LlamaForCausalLM)
+AutoConfig.register("videollama2_gemma2", Videollama2Gemma2Config)
+AutoModelForCausalLM.register(Videollama2Gemma2Config, Videollama2Gemma2ForCausalLM)
