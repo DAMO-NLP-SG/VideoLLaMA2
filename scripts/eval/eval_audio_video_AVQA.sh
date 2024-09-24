@@ -2,17 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-# CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
-CKPT=/mnt/data/xyf/va2/output/videollama2_audio_visual_stage3_a_v_va_256_16f
-#videollama2_audio_visual_stage3_a_v_va_512
-#videollama2_audio_visual_stage3_allmodality_128
-#videollama2_audio_visual_stage3_allmodality_256
-#videollama2_audio_visual_stage3_tuning_projector_beats_mistral_avinstruct
-#videollama2_audio_visual_stage3_allmodality_256
-#vlb_audio_visual_stage3_tuning_projector_beats_mistral_videollm_ep2_64_new
-#vlb_audio_visual_stage3_tuning_projector_beats_mistral_videollm_ep2_64
-#vlb_audio_visual_stage3_tuning_projector_beats_qwen2_videollm_ep2_bs128
-#vlb_audio_visual_stage3_tuning_projector_beats_qwen2_videollm_ep2
+CKPT=CKPT=DAMO-NLP-SG/VideoLLaMA2-7B-16F-AV
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -31,9 +21,9 @@ if [ ! -f "$output_file" ]; then
         TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_audio_video.py \
             --model-path ${CKPT} \
             --dataset AVQA \
-            --video-folder /mnt/data/xyf/AVQA_music/MUSIC-AVQA-videos \
-            --question-file /mnt/data/xyf/AVQA_music/AVQA_music_test.json \
-            --answer-file /mnt/data/xyf/AVQA_music/AVQA_music_test.json \
+            --video-folder ${EVAL_DATA_DIR}/AVQA_music/MUSIC-AVQA-videos \
+            --question-file ${EVAL_DATA_DIR}/AVQA_music/AVQA_music_test.json \
+            --answer-file ${EVAL_DATA_DIR}/AVQA_music/AVQA_music_test.json \
             --output-file ${OUTPUT_DIR}/AVQA/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
             --num-chunks $CHUNKS \
             --chunk-idx $IDX

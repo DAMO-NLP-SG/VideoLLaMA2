@@ -1,10 +1,8 @@
 set -x
 
-EVAL_DATA_DIR=/mnt/data/DATASETS/video_benchmark/
+EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-CKPT=/mnt/data/xyf/va2/output/videollama2_audio_visual_stage3_a_v_va_256_16f
-#videollama2_audio_visual_stage3_tuning_projector_beats_mistral_avinstruct
-#videollama2_audio_visual_stage3_tuning_projector_beats_mistral_avinstruct
+CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"

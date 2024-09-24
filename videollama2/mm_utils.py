@@ -213,7 +213,6 @@ def process_audio_from_video(audio_path, clip_duration, device="cpu", num_mel_bi
     )
     try:
         waveform, sr = load_audio_from_video(audio_path)
-        #print(audio_path)
     except Exception as audio_error:
         print(f"Failed to process audio from video due to error: {audio_error}")
         waveform = torch.zeros(480000)

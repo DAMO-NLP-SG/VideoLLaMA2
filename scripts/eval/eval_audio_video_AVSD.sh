@@ -2,16 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-# CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
-CKPT=/mnt/data/xyf/va2/output/videollama2_audio_visual_stage3_a_v_va_256_16f
-#videollama2_audio_visual_stage3_a_v_va_512
-#videollama2_audio_visual_stage3_allmodality_128
-#videollama2_audio_visual_stage3_allmodality_512
-#videollama2_audio_visual_stage3_tuning_projector_beats_mistral_avinstruct
-#vlb_audio_visual_stage3_tuning_projector_beats_mistral_videollm_ep2_64_new
-#vlb_audio_visual_stage3_tuning_projector_beats_mistral_videollm_ep2_64
-#vlb_audio_visual_stage3_tuning_projector_beats_qwen2_videollm_ep2_bs128
-#vlb_audio_visual_stage3_tuning_projector_beats_qwen2_videollm_ep2
+CKPT=CKPT=DAMO-NLP-SG/VideoLLaMA2-7B-16F-AV
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -30,9 +21,9 @@ if [ ! -f "$output_file" ]; then
         TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_audio_video.py \
             --model-path ${CKPT} \
             --dataset AVSD \
-            --video-folder /mnt/data/xyf/AVSD/Charades_v1_480 \
-            --question-file /mnt/data/xyf/AVSD/instruction_val.json \
-            --answer-file /mnt/data/xyf/AVSD/instruction_val.json \
+            --video-folder ${EVAL_DATA_DIR}/AVSD/Charades_v1_480 \
+            --question-file ${EVAL_DATA_DIR}/AVSD/instruction_val.json \
+            --answer-file ${EVAL_DATA_DIR}/AVSD/instruction_val.json \
             --output-file ${OUTPUT_DIR}/AVSD/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
             --num-chunks $CHUNKS \
             --chunk-idx $IDX
@@ -51,6 +42,6 @@ fi
 
 python videollama2/eval/eval_audio_video_AVSD.py \
     --pred-path /mnt/data/xyf/VideoLLaMA2_backup/eval_output/AVSD/answers/vlb_audio_visual_stage3_tuning_projector_beats_qwen2_videollm_ep2/merge.json \
-    --api-key f68a11a54a064caa851e290258d52cce \
-    --api-endpoint https://vl-australiaeast.openai.azure.com/ \
-    --api-deployname gpt35-turbo-0613
+    --api-key $AZURE_API_KEY \
+    --api-endpoint $AZURE_API_ENDPOINT \
+    --api-deployname $AZURE_API_DEPLOYNAME

@@ -227,7 +227,6 @@ class Videollama2MetaForCausalLM(ABC):
             select_audio_id = [] 
             select_videoimage_id = []
             for idx, data_list in enumerate(images):
-                #print(data_list)
                 if isinstance(data_list[0], dict):
                     assert data_list[1] == "video"
                     X_audio.append(data_list[0]["audio"])

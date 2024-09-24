@@ -58,35 +58,6 @@ class ClothoAQADataset(Dataset):
             'answer':      answer,
         }
 
-class ClothoDataset(Dataset):
-
-    audoi_formats = ['.wav', '.flac']
-
-    def __init__(self, questions, processor):
-        self.questions = questions
-        self.processor = processor
-
-    def __len__(self):
-        return len(self.questions)
-    
-    def __getitem__(self, idx):
-        sample = self.questions[idx]
-
-        audio_path  = sample['audio']
-        wrapped_question = f"Describe the audio."
-        question_id = audio_path.split("/")[-1]
-        answer      = sample['captions']
-
-        audio_tensor = self.processor(audio_path)
-
-        return {
-            'audio':       audio_tensor,
-            'audio_name':  audio_path.split("/")[-1],
-            'question':    wrapped_question,
-            'question_id': question_id,
-            'answer':      answer,
-        }
-
 class TUT2017Dataset(Dataset):
 
     audoi_formats = ['.wav', '.flac']
@@ -145,35 +116,6 @@ class VocalSoundDataset(Dataset):
             'answer':      answer,
         }
 
-class AIRDataset(Dataset):
-
-    audoi_formats = ['.wav', '.flac']
-
-    def __init__(self, questions, processor):
-        self.questions = questions
-        self.processor = processor
-
-    def __len__(self):
-        return len(self.questions)
-    
-    def __getitem__(self, idx):
-        sample = self.questions[idx]
-
-        audio_path = sample['audio']
-        wrapped_question = sample['query']
-        question_id = sample['id']
-        answer = sample['answer']
-
-        audio_tensor = self.processor(audio_path)
-
-        return {
-            'audio':       audio_tensor,
-            'audio_name':  audio_path.split("/")[-1],
-            'question':    wrapped_question,
-            'question_id': question_id,
-            'answer':      answer,
-        }
-
 
 def collate_fn(batch):
     vid  = [x['audio'] for x in batch]
@@ -196,19 +138,6 @@ def run_inference(args):
         gt_questions = json.load(open(args.question_file, "r"))
         gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
         dataset = ClothoAQADataset(gt_questions, processor['audio'])
-    elif args.dataset == "clotho":
-        import csv
-        gt_questions = []
-        with open(args.question_file, mode='r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            header = next(reader) # remove header
-            for row in reader:
-                gt_questions.append({
-                    "audio": os.path.join(args.video_folder, row[0]),
-                    "captions": row[1:]
-                })
-        gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
-        dataset = ClothoDataset(gt_questions, processor['audio'])
     elif args.dataset == "TUT2017":
         gt_questions = []
         with open(args.question_file, "r") as fp:
@@ -225,16 +154,6 @@ def run_inference(args):
                 gt_questions[-1]["audio"] = os.path.join(args.video_folder, gt_questions[-1]["audio"].split("/")[-1])
         gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
         dataset = VocalSoundDataset(gt_questions, processor['audio'])
-    elif args.dataset == "AIR":
-        gt_answer = {x["uniq_id"]: x for x in json.load(open(args.answer_file, "r"))}
-        
-        gt_questions = []
-        with open(args.question_file, "r") as fp:
-            for x in fp.readlines():
-                gt_questions.append(json.loads(x))
-                gt_questions[-1]["answer"] = gt_answer[gt_questions[-1]["id"]]["answer_gt"]
-        gt_questions = get_chunk(gt_questions, args.num_chunks, args.chunk_idx)
-        dataset = AIRDataset(gt_questions, processor['audio'])
     else:
         raise NotImplementedError
 

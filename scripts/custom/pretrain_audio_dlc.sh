@@ -6,7 +6,6 @@ ARG_NPROC_PER_NODE=${2:-8}
 ARG_MASTER_ADDR="127.0.0.1"
 ARG_MASTER_PORT=16666
 ARG_RANK=0
-
 # Multiple conditions
 if [ ! -n "$WORLD_SIZE" ] || [ ! -n "$NPROC_PER_NODE" ]; then
     WORLD_SIZE=$ARG_WORLD_SIZE
@@ -22,14 +21,14 @@ echo "WORLD_SIZE: $WORLD_SIZE"
 echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 
 # Training Arguments
-GLOBAL_BATCH_SIZE=128
-LOCAL_BATCH_SIZE=4
+GLOBAL_BATCH_SIZE=1024
+LOCAL_BATCH_SIZE=32
 GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$LOCAL_BATCH_SIZE)]
-#vlb_audio_stage2_mlp_mistral_videollm_ep2_128
+
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=audio_stage2_qwen2
-RUN_NAME=audio_stage2_qwen2
+export WANDB_PROJECT=videollama2_audio_stage1
+RUN_NAME=videollama2_audio_stage1
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 torchrun --nnodes $WORLD_SIZE \
@@ -40,32 +39,32 @@ torchrun --nnodes $WORLD_SIZE \
     videollama2/train_flash_attn.py \
     --deepspeed scripts/zero2.json \
     --model_type videollama2 \
-    --model_path /mnt/data/xyf/VideoLLaMA2-7B-16F \
-    --data_path_a /mnt/data/xyf/stage2_sft.json \
-    --audio_tower /mnt/data/xyf/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
-    --pretrain_mm_mlp_adapter_a /mnt/data/xyf/audio_output/stage1_mlp_whisper_qwen2/mm_projector_a.bin \
+    --model_path DAMO-NLP-SG/VideoLLaMA2-7B-16F \
+    --data_path_a ${DATA_DIR}/audio/stage1_wavcaps.json \
+    --audio_tower ./BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
     --mm_projector_a_type mlp2x_gelu \
     --tune_mm_mlp_adapter_a True \
-    --tune_audio_tower True \
+    --mm_vision_select_layer -1 \
     --bf16 True \
     --tf32 True \
     --fp16 False \
-    --output_dir /mnt/data/xyf/va2/output/vlb_audio_stage2_mlp_mistral_videollm_ep2_64_updated \
-    --num_train_epochs 2 \
-    --per_device_train_batch_size 8 \
+    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_audio_${RUN_NAME} \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size $LOCAL_BATCH_SIZE \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 1 \
+    --gradient_accumulation_steps $GRADIENT_ACCUMULATION_STEPS \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 2000 \
-    --save_total_limit 2 \
-    --learning_rate 2e-5 \
+    --save_steps 1000 \
+    --save_total_limit 1 \
+    --learning_rate 1e-3 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
     --logging_steps 1 \
     --model_max_length 2048 \
-    --group_by_modality_length True \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
+    --report_to wandb \
+    --run_name pretrain_$RUN_NAME \

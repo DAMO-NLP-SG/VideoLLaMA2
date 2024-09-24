@@ -183,7 +183,6 @@ def build_vision_tower(vision_tower_cfg, **kwargs):
         vision_tower = SiglipVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
     else:
         raise ValueError(f'Unknown vision tower: {vision_tower}')
-    #print(vision_tower)
     return vision_tower
 
 def build_audio_tower(audio_tower_cfg, delay_load=False, **kwargs):

@@ -2,14 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-# CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
-CKPT=/mnt/data/xyf/va2/output/videollama2_audio_visual_stage3_a_v_va_256_16f
-#videollama2_audio_visual_stage3_a_v_va_512
-#videollama2_audio_visual_stage3_allmodality_256
-#vlb_audio_stage2_mlp_mistral_videollm_ep2_64_updated
-#vlb_audio_stage2_mlp_mistral_videollm_ep2_sft_128
-#vlb_audio_stage2_mlp_mistral_videollm_ep2_sft_64
-#vlb_audio_stage2_mlp_encoder_beats_qwen2_new_videollm_ep2_64
+CKPT=CKPT=DAMO-NLP-SG/VideoLLaMA2-7B-16F-audio
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -28,9 +21,9 @@ if [ ! -f "$output_file" ]; then
         TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES=${gpu_devices} python3 videollama2/eval/inference_audio.py \
             --model-path ${CKPT} \
             --dataset vocalsound \
-            --video-folder /mnt/data/xyf/vocal/audio_16k \
-            --question-file /mnt/data/xyf/vocal/vocalsound_eval.jsonl \
-            --answer-file /mnt/data/xyf/vocal/vocalsound_eval.jsonl \
+            --video-folder ${EVAL_DATA_DIR}/vocal/audio_16k \
+            --question-file ${EVAL_DATA_DIR}/vocal/vocalsound_eval.jsonl \
+            --answer-file ${EVAL_DATA_DIR}/vocal/vocalsound_eval.jsonl \
             --output-file ${OUTPUT_DIR}/vocalsound/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json \
             --num-chunks $CHUNKS \
             --chunk-idx $IDX &

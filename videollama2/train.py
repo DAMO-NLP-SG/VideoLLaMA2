@@ -153,7 +153,6 @@ def preprocess_plain(
     conversations = []
     input_ids = []
     targets = []
-    #print(sources)
     for source in sources:
         # 1. apply chat template for input conversation
         assert len(source) == 2
@@ -163,16 +162,12 @@ def preprocess_plain(
             {'role': 'assistant', 'content': source[1]['value']}
         ]
         conversation = tokenizer.apply_chat_template(message, tokenize=False, add_generation_prompt=False)
-        #print(conversation) //<s> [INST] <audio> [/INST] Someone is speaking.</s>
         # 2. tokenize conversations
         input_ids.append(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
         # 3. make targets
         targets.append(copy.deepcopy(input_ids[-1]))
-        #print(targets)
         instruction = tokenizer.apply_chat_template(message[:1], tokenize=False, add_generation_prompt=True)
-        #print(instruction) //<s> [INST] <audio> [/INST]
         instruction_len = len(tokenizer_multimodal_token(instruction, tokenizer, modal_token, return_tensors='pt'))
-        #print(instruction_len) //12
         targets[-1][:instruction_len] = IGNORE_INDEX
         # print("instruction: ----------------")
         # print(instruction)
@@ -202,11 +197,8 @@ def preprocess(
             source = source[1:]
         message = [{'role': roles[sentence['from']], 'content': sentence['value']} for sentence in source]
         conversation = tokenizer.apply_chat_template(message, tokenize=False, add_generation_prompt=False)
-        #print(conversation)
         input_ids.append(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
-        #print(input_ids)
         targets.append(copy.deepcopy(input_ids[-1]))
-        #print(targets)
         assert len(source) % 2 == 0, f"Invalid conversation length {len(source)}."
 
         cur = 0
@@ -225,7 +217,6 @@ def preprocess(
                 conversation_len = len(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
 
                 targets[-1][cur:instruction_len] = IGNORE_INDEX
-                #print(targets[-1])
                 cur = conversation_len
                 message += tmp_message
     return dict(input_ids=input_ids, labels=targets)
@@ -665,14 +656,6 @@ def train(attn_implementation=None):
                         module = module.to(torch.bfloat16)
 
     print("Current model:", model)
-    '''
-    for name, param in model.named_parameters():
-        # Check if the parameter requires gradient
-        if param.requires_grad:
-            print(f'Parameter: {name} is trainable')
-        else:
-            print(f'Parameter: {name} is frozen')
-    '''
 
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
     # select a Trainer

@@ -164,8 +164,6 @@ def run_inference(args):
         question_id  = question_ids[0]
         answer       = answers[0]
 
-        # question = question + '\n' + 'Answer the question using a single word or a short phrase with multiple words.'
-
         try:
             output = mm_infer(
                 audio_video_tensor,
