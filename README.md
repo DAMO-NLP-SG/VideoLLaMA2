@@ -42,6 +42,7 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 
 
 ## 📰 News
+* **[2024.10.15]**   Release checkpoints of [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) and [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
 * **[2024.08.14]**   Release checkpoints of [VideoLLaMA2-72B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B-Base) and [VideoLLaMA2-72B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B)
 * **[2024.07.30]**  Release checkpoints of [VideoLLaMA2-8x7B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B-Base) and [VideoLLaMA2-8x7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B).
 * **[2024.06.25]**  🔥🔥 As of Jun 25, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [MLVU Leaderboard](https://github.com/JUNJIE99/MLVU?tab=readme-ov-file#trophy-mini-leaderboard).
@@ -81,10 +82,10 @@ pip install flash-attn==2.5.8 --no-build-isolation
 ## 🚀 Main Results
 
 ### Multi-Choice Video QA & Video Captioning
-<p><img src="https://github.com/user-attachments/assets/fbe3e3c2-b0f1-4e29-8b92-bc3611192909" width="800" "/></p>
+<p><img src="https://github.com/user-attachments/assets/e87fe4cf-07ea-4fde-998b-a0c63671c3b4" width="800" "/></p>
 
 ###  Open-Ended Video QA
-<p><img src="https://github.com/user-attachments/assets/cee2efe1-309e-4301-a217-e2a848799953" width="800" "/></p>
+<p><img src="https://github.com/user-attachments/assets/80b16c04-75ac-43b8-bc22-6952fdf994bb" width="800" "/></p>
 
 
 
