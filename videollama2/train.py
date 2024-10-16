@@ -87,7 +87,7 @@ class ModelArguments:
 @dataclass
 class DataArguments:
     # Path Arguments
-    data_path: str = field(default=None, metadata={"help": "Path to the training data."})
+    data_path: List[str] = field(default=None, metadata={"help": "Path to the training data."})
     # image_folder: Optional[str] = field(default=None)
     # video_folder: Optional[str] = field(default=None)
     data_folder: Optional[str] = field(default=None)
@@ -105,7 +105,6 @@ class TrainingArguments(transformers.TrainingArguments):
     mm_projector_lr: Optional[float] = None
     freeze_mm_mlp_adapter: bool = field(default=False)
     remove_unused_columns: bool = field(default=False)
-    cache_dir: Optional[str] = field(default=None)
     # Training Data Arguments 
     group_by_modality_length: bool = field(default=False)
     model_max_length: int = field(
@@ -205,16 +204,6 @@ def preprocess(
 
                 targets[-1][cur:instruction_len] = IGNORE_INDEX
 
-                # print("instruction: ----------------")
-                # print(instruction)
-                # print("conversation: ----------------")
-                # print(conversation)
-                # print("training targets: ----------------")
-                # print(tokenizer.decode(targets[-1][instruction_len:conversation_len]))
-                # print(input_ids[-1][cur:conversation_len])
-                # print(targets[-1][cur:conversation_len])
-                # print(targets[-1][instruction_len:conversation_len])
-
                 cur = conversation_len
                 message += tmp_message
 
@@ -252,7 +241,10 @@ class LazySupervisedDataset(Dataset):
                  tokenizer: transformers.PreTrainedTokenizer,
                  data_args: DataArguments):
         super(LazySupervisedDataset, self).__init__()
-        list_data_dict = json.load(open(data_path, "r"))
+        list_data_dict = []
+        for dp in data_path:
+            _datas = json.load(open(dp, "r"))
+            list_data_dict.extend(_datas)
 
         rank0_print("Formatting inputs...Skip in lazy mode")
         self.tokenizer = tokenizer
@@ -398,7 +390,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 data_collator=data_collator)
 
 
-def train(attn_implementation="flash_attention_2"):
+def train(attn_implementation=None):
     global local_rank
     set_seed(42)
 
@@ -437,7 +429,6 @@ def train(attn_implementation="flash_attention_2"):
         model = VLLMs[model_args.model_type].from_pretrained(
             model_args.model_path,
             config=config,
-            cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             do_sample=True,
             **bnb_model_from_pretrained_args
@@ -449,7 +440,6 @@ def train(attn_implementation="flash_attention_2"):
         model = transformers.LlamaForCausalLM.from_pretrained(
             model_args.model_path,
             config=config,
-            cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             do_sample=True,
             **bnb_model_from_pretrained_args
@@ -493,7 +483,6 @@ def train(attn_implementation="flash_attention_2"):
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_path,
-        cache_dir=training_args.cache_dir,
         model_max_length=training_args.model_max_length,
         padding_side="right",
         use_fast=True,
@@ -580,4 +569,4 @@ def train(attn_implementation="flash_attention_2"):
 
 
 if __name__ == "__main__":
-    train()
+    train("flash_attention_2")
