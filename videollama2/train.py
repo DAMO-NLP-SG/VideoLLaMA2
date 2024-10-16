@@ -398,7 +398,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 data_collator=data_collator)
 
 
-def train(attn_implementation=None):
+def train(attn_implementation="flash_attention_2"):
     global local_rank
     set_seed(42)
 

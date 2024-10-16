@@ -265,7 +265,7 @@ VideoLLaMA2
 ...
 --data_path datasets/custom_sft/custom.json
 --data_folder datasets/custom_sft/
---pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2-7B-Base)
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base)
 ...
 ```
 
@@ -296,9 +296,9 @@ def inference():
     # Reply:
     # The woman in the image is wearing a black coat and sunglasses, and she is walking down a rain-soaked city street. The image feels vibrant and lively, with the bright city lights reflecting off the wet pavement, creating a visually appealing atmosphere. The woman's presence adds a sense of style and confidence to the scene, as she navigates the bustling urban environment.
 
-    model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
+    model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F'
     # Base model inference (only need to replace model_path)
-    # model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-Base'
+    # model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base'
     model, processor, tokenizer = model_init(model_path)
     output = mm_infer(processor[modal](modal_path), instruct, model=model, tokenizer=tokenizer, do_sample=False, modal=modal)
 

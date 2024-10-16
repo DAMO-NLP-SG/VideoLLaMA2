@@ -5,7 +5,7 @@ ARG_WORLD_SIZE=${1:-1}
 ARG_NPROC_PER_NODE=${2:-8}
 ARG_MASTER_ADDR="127.0.0.1"
 ARG_MASTER_PORT=16666
-ARG_RANK=0
+ARG_RANK=${3:-0}
 
 # Multiple conditions
 if [ ! -n "$WORLD_SIZE" ] || [ ! -n "$NPROC_PER_NODE" ]; then
@@ -28,8 +28,8 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2
-RUN_NAME=vllava_settings
+export WANDB_PROJECT=videollama2qwen2_vllava
+RUN_NAME=siglip_tcv35_7b_16f
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 
@@ -38,17 +38,17 @@ torchrun --nnodes $WORLD_SIZE \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
-    videollama2/train_flash_attn.py \
+    videollama2/train.py \
     --deepspeed scripts/zero3.json \
-    --model_type videollama2 \
-    --model_path mistralai/Mistral-7B-Instruct-v0.2 \
-    --vision_tower openai/clip-vit-large-patch14-336 \
+    --model_type videollama2_qwen2 \
+    --model_path Qwen/Qwen2-7B-Instruct \
+    --vision_tower google/siglip-so400m-patch14-384 \
     --mm_projector_type stc_connector_v35 \
     --tune_mm_mlp_adapter True \
     --data_path   ${DATA_DIR}/videollava_pt/valley_llavaimage.json \
     --data_folder ${DATA_DIR}/videollava_pt/ \
     --mm_vision_select_layer -2 \
-    --num_frames 8 \
+    --num_frames 16 \
     --bf16 True \
     --tf32 True \
     --fp16 False \
@@ -69,6 +69,5 @@ torchrun --nnodes $WORLD_SIZE \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --lazy_preprocess True \
     --report_to tensorboard \
     --run_name $RUN_NAME \
