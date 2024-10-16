@@ -38,7 +38,7 @@ torchrun --nnodes $WORLD_SIZE \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
-    videollama2/train_flash_attn.py \
+    videollama2/train.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 --bits 4 \
     --deepspeed scripts/zero2.json \
     --model_type videollama2_qwen2 \
