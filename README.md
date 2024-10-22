@@ -91,6 +91,11 @@ pip install flash-attn==2.5.8 --no-build-isolation
 ###  Open-Ended Video QA
 <p><img src="https://github.com/user-attachments/assets/80b16c04-75ac-43b8-bc22-6952fdf994bb" width="800" "/></p>
 
+### Multi-Choice & Open-Ended Audio QA 
+<p><img src="https://huggingface.co/YifeiXin/xin/resolve/main/VideoLLaMA2-audio.png" width="800" "/></p>
+
+### Open-Ended Audio-Visual QA 
+<p><img src="https://raw.githubusercontent.com/xinyifei99/backup/refs/heads/main/VideoLLaAM2.1-AV.png?token=GHSAT0AAAAAACP3DGUAV34IW6GFGPO2CICMZYXRVIA" width="800" "/></p>
 
 
 ## :earth_americas: Model Zoo
