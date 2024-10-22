@@ -42,6 +42,7 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 
 
 ## 📰 News
+* **[2024.10.15]**   Release checkpoints of [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) and [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
 * **[2024.08.14]**   Release checkpoints of [VideoLLaMA2-72B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B-Base) and [VideoLLaMA2-72B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B)
 * **[2024.07.30]**  Release checkpoints of [VideoLLaMA2-8x7B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B-Base) and [VideoLLaMA2-8x7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B).
 * **[2024.06.25]**  🔥🔥 As of Jun 25, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [MLVU Leaderboard](https://github.com/JUNJIE99/MLVU?tab=readme-ov-file#trophy-mini-leaderboard).
@@ -81,10 +82,10 @@ pip install flash-attn==2.5.8 --no-build-isolation
 ## 🚀 Main Results
 
 ### Multi-Choice Video QA & Video Captioning
-<p><img src="https://github.com/user-attachments/assets/fbe3e3c2-b0f1-4e29-8b92-bc3611192909" width="800" "/></p>
+<p><img src="https://github.com/user-attachments/assets/e87fe4cf-07ea-4fde-998b-a0c63671c3b4" width="800" "/></p>
 
 ###  Open-Ended Video QA
-<p><img src="https://github.com/user-attachments/assets/cee2efe1-309e-4301-a217-e2a848799953" width="800" "/></p>
+<p><img src="https://github.com/user-attachments/assets/80b16c04-75ac-43b8-bc22-6952fdf994bb" width="800" "/></p>
 
 
 
@@ -99,6 +100,9 @@ pip install flash-attn==2.5.8 --no-build-isolation
 | [VideoLLaMA2-8x7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B)  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mixtral-8x7B-Instruct-v0.1](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1)  | 8 |
 | [VideoLLaMA2-72B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B-Base)  | Base | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Qwen2-72B-Instruct](https://huggingface.co/Qwen/Qwen2-72B-Instruct)  | 8 |
 | [VideoLLaMA2-72B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B)  | Chat | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Qwen2-72B-Instruct](https://huggingface.co/Qwen/Qwen2-72B-Instruct)  | 8 |
+| [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) | Base | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
+| [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  | Chat | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
+
 
 
 ## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
@@ -261,7 +265,7 @@ VideoLLaMA2
 ...
 --data_path datasets/custom_sft/custom.json
 --data_folder datasets/custom_sft/
---pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2-7B-Base)
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base)
 ...
 ```
 
@@ -292,9 +296,9 @@ def inference():
     # Reply:
     # The woman in the image is wearing a black coat and sunglasses, and she is walking down a rain-soaked city street. The image feels vibrant and lively, with the bright city lights reflecting off the wet pavement, creating a visually appealing atmosphere. The woman's presence adds a sense of style and confidence to the scene, as she navigates the bustling urban environment.
 
-    model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
+    model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F'
     # Base model inference (only need to replace model_path)
-    # model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B-Base'
+    # model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base'
     model, processor, tokenizer = model_init(model_path)
     output = mm_infer(processor[modal](modal_path), instruct, model=model, tokenizer=tokenizer, do_sample=False, modal=modal)
 

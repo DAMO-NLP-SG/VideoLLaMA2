@@ -2,8 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-# CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
-CKPT=work_dirs/videollama2gemma2/finetune_2b_vllama2
+CKPT=DAMO-NLP-SG/VideoLLaMA2.1-7B-16F
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
@@ -39,6 +38,7 @@ if [ ! -f "$output_file" ]; then
         cat ${OUTPUT_DIR}/Activitynet_Zero_Shot_QA/answers/${CKPT_NAME}/${CHUNKS}_${IDX}.json >> "$output_file"
     done
 fi
+
 
 AZURE_API_KEY=your_key
 AZURE_API_ENDPOINT=your_endpoint

@@ -2,7 +2,7 @@ set -x
 
 EVAL_DATA_DIR=eval
 OUTPUT_DIR=eval_output
-CKPT=DAMO-NLP-SG/VideoLLaMA2-7B
+CKPT=DAMO-NLP-SG/VideoLLaMA2.1-7B-16F
 CKPT_NAME=$(echo $CKPT | rev | cut -d'/' -f1 | rev)
 
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
