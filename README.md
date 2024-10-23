@@ -41,6 +41,10 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 > Sicong Leng, Yun Xing, Zesen Cheng, Yang Zhou, Hang Zhang, Xin Li, Deli Zhao, Shijian Lu, Chunyan Miao, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/CMM)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/CMM.svg?style=social)](https://github.com/DAMO-NLP-SG/CMM)  [![arXiv](https://img.shields.io/badge/Arxiv-2410.12787-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2410.12787) <br>
 
+> [**Breaking the Memory Barrier: Near Infinite Batch Size Scaling for Contrastive Loss**](https://arxiv.org/abs/2410.17243) <br>
+> Zesen Cheng, Hang Zhang, Kehan Li, Sicong Leng, Zhiqiang Hu, Fei Wu, Deli Zhao, Xin Li, Lidong Bing <br>
+[![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/Inf-CLIP)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/Inf-CLIP.svg?style=social)](https://github.com/DAMO-NLP-SG/Inf-CLIP)  [![arXiv](https://img.shields.io/badge/Arxiv-2410.17243-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2410.17243) <br>
+
 </p></details>
 
 <div align="center"><video src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/e0e7951c-f392-42ed-afad-b2c7984d3e38" width="800"></div>
