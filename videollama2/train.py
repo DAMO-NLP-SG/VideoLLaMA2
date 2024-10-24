@@ -37,7 +37,7 @@ import sys
 sys.path.append('./')
 from videollama2.model import *
 from videollama2.constants import NUM_FRAMES, IGNORE_INDEX, MODAL_INDEX_MAP
-from videollama2.mm_utils import tokenizer_multimodal_token, process_video, process_image
+from videollama2.mm_utils import tokenizer_multimodal_token, process_video, process_image, process_audio_file
 from videollama2.videollama2_trainer import (VideoLLaMA2Trainer,
     get_peft_state_maybe_zero_3, get_peft_state_non_lora_maybe_zero_3, 
     find_all_linear_names, safe_save_model_for_hf_trainer
@@ -74,25 +74,33 @@ class ModelArguments:
     model_path: Optional[str] = field(default="lmsys/vicuna-7b-v1.5")
     version: Optional[str] = field(default="v1", metadata={"help": "Version of the conversation template."})
     freeze_backbone: bool = field(default=False, metadata={"help": "Whether to freeze the LLM backbone."})
+    tune_adapter_llm: bool = field(default=False)
     # Connector Arguments
     mm_projector_type: Optional[str] = field(default='linear')
+    mm_projector_a_type: Optional[str] = field(default='linear')
     tune_mm_mlp_adapter: bool = field(default=False)
+    tune_mm_mlp_adapter_a: bool = field(default=False)
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
+    pretrain_mm_mlp_adapter_a: Optional[str] = field(default=None)
     # Vision tower Arguments
     vision_tower: Optional[str] = field(default=None)
     mm_vision_select_layer: Optional[int] = field(default=-1)
     mm_vision_select_feature: Optional[str] = field(default="patch")
-
+    # Audio tower Arguments
+    audio_tower: Optional[str] = field(default=None)
+    tune_audio_tower: bool = field(default=False)
 
 @dataclass
 class DataArguments:
     # Path Arguments
-    data_path: List[str] = field(default=None, metadata={"help": "Path to the training data."})
+    data_path: str = field(default=None, metadata={"help": "Path to the training data."})
+    data_path_a: Optional[str] = field(default=None, metadata={"help": "Path to the audio data."})
     # image_folder: Optional[str] = field(default=None)
     # video_folder: Optional[str] = field(default=None)
     data_folder: Optional[str] = field(default=None)
     # Loading Arguments
     is_multimodal: bool = False
+    va: bool = field(default=False)
     lazy_preprocess: bool = False
     num_frames: Optional[int] = field(default=None)
     # Preprocess Arguments
@@ -152,15 +160,22 @@ def preprocess_plain(
             {'role': 'user', 'content': modal_token},
             {'role': 'assistant', 'content': source[1]['value']}
         ]
-        conversation = " ".join([sentence['value'] for sentence in source])
-
-        input_id = tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt')
-        target = copy.deepcopy(input_id)
-        target[input_id == MODAL_INDEX_MAP[modal_token]] = IGNORE_INDEX
-
-        input_ids.append(input_id)
-        targets.append(target)
-
+        conversation = tokenizer.apply_chat_template(message, tokenize=False, add_generation_prompt=False)
+        # 2. tokenize conversations
+        input_ids.append(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
+        # 3. make targets
+        targets.append(copy.deepcopy(input_ids[-1]))
+        instruction = tokenizer.apply_chat_template(message[:1], tokenize=False, add_generation_prompt=True)
+        instruction_len = len(tokenizer_multimodal_token(instruction, tokenizer, modal_token, return_tensors='pt'))
+        targets[-1][:instruction_len] = IGNORE_INDEX
+        # print("instruction: ----------------")
+        # print(instruction)
+        # print("conversation: ----------------")
+        # print(conversation)
+        # print("training targets: ----------------")
+        # print(tokenizer.decode(targets[-1][instruction_len:]))
+        # print(input_ids[-1])
+        # print(targets[-1])
     return dict(input_ids=input_ids, labels=targets)
 
 
@@ -179,12 +194,10 @@ def preprocess(
         if roles[source[0]["from"]] != "user":
             # Skip the first one if it is not from human
             source = source[1:]
-
         message = [{'role': roles[sentence['from']], 'content': sentence['value']} for sentence in source]
         conversation = tokenizer.apply_chat_template(message, tokenize=False, add_generation_prompt=False)
         input_ids.append(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
         targets.append(copy.deepcopy(input_ids[-1]))
-
         assert len(source) % 2 == 0, f"Invalid conversation length {len(source)}."
 
         cur = 0
@@ -206,7 +219,6 @@ def preprocess(
 
                 cur = conversation_len
                 message += tmp_message
-
     return dict(input_ids=input_ids, labels=targets)
 
 
@@ -237,14 +249,32 @@ def preprocess_multimodal(
 class LazySupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
 
-    def __init__(self, data_path: str,
+    def __init__(self, data_path: str, data_path_a: str,
                  tokenizer: transformers.PreTrainedTokenizer,
                  data_args: DataArguments):
         super(LazySupervisedDataset, self).__init__()
-        list_data_dict = []
-        for dp in data_path:
-            _datas = json.load(open(dp, "r"))
-            list_data_dict.extend(_datas)
+        self.mix_sampler_tag = False
+        if data_path is not None and len(data_path.split(",")) == 1:
+            data_path = data_path.split(",")[0]
+            list_data_dict = json.load(open(data_path, "r"))
+        elif data_path is not None and len(data_path.split(",")) > 1:
+            self.mix_sampler_tag = True
+            data_path = data_path.split(",")
+            for path in data_path:
+                if "stage3" in path:
+                    self.av_data = json.load(open(path, "r"))
+                    random.shuffle(self.av_data)
+                elif "stage2" in path and "audio" in path:
+                    self.a_data = json.load(open(path, "r"))
+                    random.shuffle(self.a_data)
+                elif "stage2" in path and "video" in path:
+                    self.v_data = json.load(open(path, "r"))
+                    random.shuffle(self.v_data)
+                else:
+                    raise NotImplementedError
+            list_data_dict = self.av_data + self.a_data + self.v_data
+        if data_path_a is not None:
+            list_data_dict = json.load(open(data_path_a, "r"))
 
         rank0_print("Formatting inputs...Skip in lazy mode")
         self.tokenizer = tokenizer
@@ -276,9 +306,9 @@ class LazySupervisedDataset(Dataset):
         if isinstance(i, int):
             sources = [sources]
         assert len(sources) == 1, "Don't know why it is wrapped to a list"  # FIXME
-
-        image_processor = self.data_args.image_processor
-        video_processor = self.data_args.video_processor
+        if self.data_args.data_path is not None:
+            image_processor = self.data_args.image_processor
+            video_processor = self.data_args.video_processor
 
         num_frames = NUM_FRAMES if self.data_args.num_frames is None else self.data_args.num_frames
 
@@ -301,10 +331,11 @@ class LazySupervisedDataset(Dataset):
         elif 'video' in sources[0]:
             video_file = self.list_data_dict[i]['video']
             video_folder = self.data_args.data_folder
-            video_file = os.path.join(video_folder, video_file)
+            if video_folder:
+                video_file = os.path.join(video_folder, video_file)
 
             try:
-                video = process_video(video_file, video_processor, aspect_ratio=self.data_args.image_aspect_ratio, num_frames=num_frames)
+                video = process_video(video_file, video_processor, aspect_ratio=self.data_args.image_aspect_ratio, num_frames=num_frames, va = self.data_args.va if not self.mix_sampler_tag else (i < len(self.av_data)))
             except Exception as e:
                 traceback.print_exc()
                 backup_idx = random.randint(0, len(self.list_data_dict) - 1)
@@ -314,6 +345,21 @@ class LazySupervisedDataset(Dataset):
             # place <video> tag to question head.
             modal_token = "<video>"
             sources = preprocess_multimodal(copy.deepcopy([e["conversations"] for e in sources]), self.data_args, modal_token)
+
+        elif 'audio' in sources[0]:
+            audio_file = self.list_data_dict[i]['audio']
+            #audio_folder = self.data_args.base_folder
+            #print(audio_file)
+            try:
+                audio = process_audio_file(audio_file)
+            except Exception as e:
+                print(e)
+                backup_idx = random.randint(0, len(self.list_data_dict)-1)
+                print(f"Encounted error when reading audio {audio_file}, use {backup_idx}-th example instead!!!")
+                return self.__getitem__(backup_idx)
+            modal_token = "<audio>"
+            sources = preprocess_multimodal(copy.deepcopy([e["conversations"] for e in sources]), self.data_args, modal_token)
+
         else:
             modal_token = None
             sources = copy.deepcopy([e["conversations"] for e in sources])
@@ -331,6 +377,11 @@ class LazySupervisedDataset(Dataset):
             data_dict['image'] = image
         elif 'video' in self.list_data_dict[i]:
             data_dict['video'] = video
+        elif 'audio' in self.list_data_dict[i]:
+            data_dict['audio'] = audio
+        elif self.data_args.data_path_a:
+            # image does not exist in the data, but the model is multimodal
+            data_dict['audio'] = torch.zeros(1, 2998, 128)
         elif self.data_args.is_multimodal:
             # image does not exist in the data, but the model is multimodal
             data_dict['image'] = torch.zeros(3, self.data_args.image_size, self.data_args.image_size)
@@ -382,6 +433,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
     train_dataset = LazySupervisedDataset(
         tokenizer=tokenizer,
         data_path=data_args.data_path,
+        data_path_a=data_args.data_path_a,
         data_args=data_args
     )
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
@@ -423,9 +475,12 @@ def train(attn_implementation=None):
         ))
 
     config = VLLMConfigs[model_args.model_type].from_pretrained(model_args.model_path, trust_remote_code=True)
-    config._attn_implementation = attn_implementation
+    if 'gemma2' in model_args.model_type:
+        config._attn_implementation = 'eager'
+    else:
+        config._attn_implementation = attn_implementation
 
-    if model_args.vision_tower is not None:
+    if model_args.vision_tower is not None or model_args.audio_tower is not None:
         model = VLLMs[model_args.model_type].from_pretrained(
             model_args.model_path,
             config=config,
@@ -446,8 +501,6 @@ def train(attn_implementation=None):
         )
     model.config.use_cache = False
 
-    if model_args.freeze_backbone:
-        model.model.requires_grad_(False)
 
     if training_args.bits in [4, 8]:
         from peft import prepare_model_for_kbit_training
@@ -530,6 +583,64 @@ def train(attn_implementation=None):
 
         model.config.mm_projector_lr = training_args.mm_projector_lr
         model.config.num_frames = NUM_FRAMES if data_args.num_frames is None else data_args.num_frames
+    
+
+    if model_args.audio_tower is not None:
+        # initialize audio encoder + multi-modal projector
+        model.get_model().initialize_audio_modules(
+            model_args=model_args,
+            fsdp=training_args.fsdp
+        )
+        
+        audio_tower = model.get_audio_tower()
+        audio_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
+
+        data_args.is_multimodal = True
+
+        model.config.tokenizer_padding_side = tokenizer.padding_side
+        model.config.tokenizer_model_max_length = tokenizer.model_max_length
+
+        model.config.tune_mm_mlp_adapter_a = training_args.tune_mm_mlp_adapter_a = model_args.tune_mm_mlp_adapter_a
+        training_args.pretrain_mm_mlp_adapter_a = model_args.pretrain_mm_mlp_adapter_a
+        training_args.tune_audio_tower = model_args.tune_audio_tower
+        # only update mm_mlp's parameters while the remaining ones are kept frozen
+        if model_args.tune_mm_mlp_adapter_a:
+            model.requires_grad_(False)
+            for p in model.get_model().mm_projector_a.parameters():
+                p.requires_grad = True
+        
+        if model_args.tune_audio_tower or model_args.tune_adapter_llm:
+            data_args.is_pretraining = False
+        else:
+            data_args.is_pretraining = True
+
+        model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
+        if training_args.freeze_mm_mlp_adapter:
+            for p in model.get_model().mm_projector_a.parameters():
+                p.requires_grad = False
+        
+        if model_args.tune_adapter_llm:
+            model.requires_grad_(True)
+            if hasattr(model.get_model(), 'vision_tower'):
+                for p in model.get_model().vision_tower.parameters():
+                    p.requires_grad = False
+            for p in model.get_model().audio_tower.parameters():
+                p.requires_grad = False   
+                
+        if model_args.freeze_backbone:
+            model.requires_grad_(False)
+
+        if model_args.tune_audio_tower:
+            for p in model.get_model().audio_tower.parameters():
+                p.requires_grad = True
+        else:
+            for p in model.get_model().audio_tower.parameters():
+                p.requires_grad = False
+
+        if training_args.bits in [4, 8]:
+            model.get_model().mm_projector_a.to(dtype=compute_dtype, device=training_args.device)
+
+        model.config.mm_projector_lr = training_args.mm_projector_lr
 
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer
@@ -545,10 +656,10 @@ def train(attn_implementation=None):
                         module = module.to(torch.bfloat16)
 
     print("Current model:", model)
+
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
     # select a Trainer
     trainer = VideoLLaMA2Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
-
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
     else:
@@ -569,4 +680,4 @@ def train(attn_implementation=None):
 
 
 if __name__ == "__main__":
-    train("flash_attention_2")
+    train()
