@@ -27,8 +27,8 @@ GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$L
 
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2_audio_stage1
-RUN_NAME=videollama2_audio_stage1
+export WANDB_PROJECT=videollama2qwen2_audio_stage1
+RUN_NAME=videollama2qwen2_audio_stage1
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 torchrun --nnodes $WORLD_SIZE \
@@ -36,11 +36,11 @@ torchrun --nnodes $WORLD_SIZE \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
-    videollama2/train_flash_attn.py \
+    videollama2/train.py \
     --deepspeed scripts/zero2.json \
-    --model_type videollama2 \
-    --model_path DAMO-NLP-SG/VideoLLaMA2-7B-16F \
-    --data_path_a ${DATA_DIR}/audio/stage1_wavcaps.json \
+    --model_type videollama2_qwen2 \
+    --model_path DAMO-NLP-SG/VideoLLaMA2.1-7B-16F \
+    --data_path_a ${DATA_DIR}/stage1_pretrain.json \
     --audio_tower ./BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
     --mm_projector_a_type mlp2x_gelu \
     --tune_mm_mlp_adapter_a True \
@@ -48,7 +48,7 @@ torchrun --nnodes $WORLD_SIZE \
     --bf16 True \
     --tf32 True \
     --fp16 False \
-    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_audio_${RUN_NAME} \
+    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/pretrain_${RUN_NAME} \
     --num_train_epochs 1 \
     --per_device_train_batch_size $LOCAL_BATCH_SIZE \
     --per_device_eval_batch_size 4 \
@@ -66,5 +66,5 @@ torchrun --nnodes $WORLD_SIZE \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to wandb \
+    --report_to tensorboard \
     --run_name pretrain_$RUN_NAME \

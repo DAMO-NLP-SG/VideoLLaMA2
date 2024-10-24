@@ -25,11 +25,11 @@ echo "NPROC_PER_NODE: $NPROC_PER_NODE"
 GLOBAL_BATCH_SIZE=128
 LOCAL_BATCH_SIZE=4
 GRADIENT_ACCUMULATION_STEPS=$[$GLOBAL_BATCH_SIZE/($WORLD_SIZE*$NPROC_PER_NODE*$LOCAL_BATCH_SIZE)]
-#vlb_audio_stage2_mlp_mistral_videollm_ep2_128
+
 # Log Arguments
 export TRANSFORMERS_OFFLINE=1
-export WANDB_PROJECT=videollama2_audio_stage2
-RUN_NAME=videollama2_audio_stage2
+export WANDB_PROJECT=audio_stage2_qwen2
+RUN_NAME=audio_stage2_qwen2
 DATA_DIR=datasets
 OUTP_DIR=work_dirs
 torchrun --nnodes $WORLD_SIZE \
@@ -37,20 +37,20 @@ torchrun --nnodes $WORLD_SIZE \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
-    videollama2/train_flash_attn.py \
+    videollama2/train.py \
     --deepspeed scripts/zero2.json \
-    --model_type videollama2 \
-    --model_path DAMO-NLP-SG/VideoLLaMA2-7B-16F \
-    --data_path_a ${DATA_DIR}/audio/stage2_sft.json \
+    --model_type videollama2_qwen2 \
+    --model_path DAMO-NLP-SG/VideoLLaMA2.1-7B-16F \
+    --data_path_a ${DATA_DIR}/stage2_audio_text.json \
     --audio_tower ./BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt \
-    --pretrain_mm_mlp_adapter_a DAMO-NLP-SG/VideoLLaMA2-7B-Base-audio/mm_projector_a.bin \
+    --pretrain_mm_mlp_adapter_a $OUTP_DIR/mm_projector_a.bin \
     --mm_projector_a_type mlp2x_gelu \
     --tune_mm_mlp_adapter_a True \
     --tune_audio_tower True \
     --bf16 True \
     --tf32 True \
     --fp16 False \
-    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/finetune_audio_${RUN_NAME} \
+    --output_dir ${OUTP_DIR}/${WANDB_PROJECT}/finetune_${RUN_NAME} \
     --num_train_epochs 2 \
     --per_device_train_batch_size $LOCAL_BATCH_SIZE \
     --per_device_eval_batch_size 4 \
@@ -65,7 +65,8 @@ torchrun --nnodes $WORLD_SIZE \
     --lr_scheduler_type "cosine" \
     --logging_steps 1 \
     --model_max_length 2048 \
-    --group_by_modality_length True \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
+    --report_to tensorboard \
+    --run_name $RUN_NAME \

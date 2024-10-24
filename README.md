@@ -36,14 +36,19 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 > Sicong Leng, Hang Zhang, Guanzheng Chen, Xin Li, Shijian Lu, Chunyan Miao, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/VCD)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/VCD.svg?style=social)](https://github.com/DAMO-NLP-SG/VCD)  [![arXiv](https://img.shields.io/badge/Arxiv-2311.16922-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2311.16922) <br>
 
+> [**The Curse of Multi-Modalities: Evaluating Hallucinations of Large Multimodal Models across Language, Visual, and Audio**](https://arxiv.org/abs/2410.12787) <br>
+> Sicong Leng, Yun Xing, Zesen Cheng, Yang Zhou, Hang Zhang, Xin Li, Deli Zhao, Shijian Lu, Chunyan Miao, Lidong Bing <br>
+[![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/CMM)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/CMM.svg?style=social)](https://github.com/DAMO-NLP-SG/CMM)  [![arXiv](https://img.shields.io/badge/Arxiv-2410.12787-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2410.12787) <br>
+
 </p></details>
 
 <div align="center"><video src="https://github.com/DAMO-NLP-SG/VideoLLaMA2/assets/18526640/e0e7951c-f392-42ed-afad-b2c7984d3e38" width="800"></div>
 
 
 ## 📰 News
-* **[2024.10.15]**   Release checkpoints of [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) and [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
-* **[2024.08.14]**   Release checkpoints of [VideoLLaMA2-72B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B-Base) and [VideoLLaMA2-72B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B)
+* **[2024.10.22]**  Release checkpoints of [VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-AV).
+* **[2024.10.15]**  Release checkpoints of [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) and [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F).
+* **[2024.08.14]**  Release checkpoints of [VideoLLaMA2-72B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B-Base) and [VideoLLaMA2-72B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-72B).
 * **[2024.07.30]**  Release checkpoints of [VideoLLaMA2-8x7B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B-Base) and [VideoLLaMA2-8x7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-8x7B).
 * **[2024.06.25]**  🔥🔥 As of Jun 25, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [MLVU Leaderboard](https://github.com/JUNJIE99/MLVU?tab=readme-ov-file#trophy-mini-leaderboard).
 * **[2024.06.18]**  🔥🔥 As of Jun 18, our [VideoLLaMA2-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-16F) is the **Top-1** ~7B-sized VideoLLM on the [VideoMME Leaderboard](https://video-mme.github.io/home_page.html#leaderboard).
@@ -87,9 +92,16 @@ pip install flash-attn==2.5.8 --no-build-isolation
 ###  Open-Ended Video QA
 <p><img src="https://github.com/user-attachments/assets/80b16c04-75ac-43b8-bc22-6952fdf994bb" width="800" "/></p>
 
+### Audio QA 
+<p><img src="https://github.com/user-attachments/assets/46e55952-5a54-4564-bcd4-cfa4edd7f36a" width="800" "/></p>
+>>>>>>> origin/audio_visual
+
+### Audio-Visual QA 
+<p><img src="https://github.com/user-attachments/assets/8114c1e3-7f93-401b-9ea6-9ce7c96d7b05" width="800" "/></p>
 
 
 ## :earth_americas: Model Zoo
+### Vision-only Checkpoints
 | Model Name     | Model Type | Visual Encoder | Language Decoder | # Training Frames |
 |:----------------|:------------:|:----------------|:------------------|:----------------:|
 | [VideoLLaMA2-7B-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B-Base)  | Base  | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)  | 8 |
@@ -103,6 +115,10 @@ pip install flash-attn==2.5.8 --no-build-isolation
 | [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) | Base | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
 | [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  | Chat | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
 
+### Audio-Visual Checkpoints
+| Model Name     | Type | Audio Encoder | Language Decoder |
+|:-------------------|:----------------|:----------------|:------------------|
+| [VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-AV)  | Chat | [Fine-tuned BEATs_iter3+(AS2M)(cpt2)](https://1drv.ms/u/s!AqeByhGUtINrgcpj8ujXH1YUtxooEg?e=E9Ncea) | [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  |
 
 
 ## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
@@ -118,7 +134,7 @@ To run a video-based LLM (Large Language Model) web demonstration on your device
 python videollama2/serve/gradio_web_server_adhoc.py
 ```
 
-### Multi-model Version
+### Multiple-model Version
 
 1. Launch a global controller
 ```bash

@@ -113,7 +113,6 @@ class TrainingArguments(transformers.TrainingArguments):
     mm_projector_lr: Optional[float] = None
     freeze_mm_mlp_adapter: bool = field(default=False)
     remove_unused_columns: bool = field(default=False)
-    cache_dir: Optional[str] = field(default=None)
     # Training Data Arguments 
     group_by_modality_length: bool = field(default=False)
     model_max_length: int = field(
@@ -217,6 +216,7 @@ def preprocess(
                 conversation_len = len(tokenizer_multimodal_token(conversation, tokenizer, modal_token, return_tensors='pt'))
 
                 targets[-1][cur:instruction_len] = IGNORE_INDEX
+
                 cur = conversation_len
                 message += tmp_message
     return dict(input_ids=input_ids, labels=targets)
@@ -379,6 +379,9 @@ class LazySupervisedDataset(Dataset):
             data_dict['video'] = video
         elif 'audio' in self.list_data_dict[i]:
             data_dict['audio'] = audio
+        elif self.data_args.data_path_a:
+            # image does not exist in the data, but the model is multimodal
+            data_dict['audio'] = torch.zeros(1, 2998, 128)
         elif self.data_args.is_multimodal:
             # image does not exist in the data, but the model is multimodal
             data_dict['image'] = torch.zeros(3, self.data_args.image_size, self.data_args.image_size)
@@ -481,7 +484,6 @@ def train(attn_implementation=None):
         model = VLLMs[model_args.model_type].from_pretrained(
             model_args.model_path,
             config=config,
-            cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             do_sample=True,
             **bnb_model_from_pretrained_args
@@ -493,7 +495,6 @@ def train(attn_implementation=None):
         model = transformers.LlamaForCausalLM.from_pretrained(
             model_args.model_path,
             config=config,
-            cache_dir=training_args.cache_dir,
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             do_sample=True,
             **bnb_model_from_pretrained_args
@@ -535,7 +536,6 @@ def train(attn_implementation=None):
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_path,
-        cache_dir=training_args.cache_dir,
         model_max_length=training_args.model_max_length,
         padding_side="right",
         use_fast=True,

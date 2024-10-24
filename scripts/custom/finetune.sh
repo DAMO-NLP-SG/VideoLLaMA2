@@ -38,7 +38,7 @@ torchrun --nnodes $WORLD_SIZE \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \
     --node_rank $RANK \
-    videollama2/train_flash_attn.py \
+    videollama2/train.py \
     --deepspeed scripts/zero3.json \
     --model_type videollama2_qwen2 \
     --model_path Qwen/Qwen2-7B-Instruct \
