@@ -99,6 +99,7 @@ pip install flash-attn==2.5.8 --no-build-isolation
 
 ### Audio QA 
 <p><img src="https://github.com/user-attachments/assets/46e55952-5a54-4564-bcd4-cfa4edd7f36a" width="800" "/></p>
+>>>>>>> origin/audio_visual
 
 ### Audio-Visual QA 
 <p><img src="https://github.com/user-attachments/assets/8114c1e3-7f93-401b-9ea6-9ce7c96d7b05" width="800" "/></p>
@@ -119,12 +120,10 @@ pip install flash-attn==2.5.8 --no-build-isolation
 | [VideoLLaMA2.1-7B-16F-Base](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base) | Base | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
 | [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  | Chat | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384) | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)  | 16 |
 
-
 ### Audio-Visual Checkpoints
 | Model Name     | Type | Audio Encoder | Language Decoder |
 |:-------------------|:----------------|:----------------|:------------------|
 | [VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-AV)  | Chat | [Fine-tuned BEATs_iter3+(AS2M)(cpt2)](https://1drv.ms/u/s!AqeByhGUtINrgcpj8ujXH1YUtxooEg?e=E9Ncea) | [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  |
-
 
 
 ## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)

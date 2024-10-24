@@ -232,7 +232,7 @@ def run_inference(args):
 
     # Initialize the model
     model, processor, tokenizer = model_init(args.model_path)
-
+    model.model.audio_tower = None
     answer_file = os.path.expanduser(args.answer_file)
     answer_sub_file = answer_file.replace('.json', '_sub.json')
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
