@@ -73,6 +73,8 @@ git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
 pip install -r requirements.txt
 pip install flash-attn==2.5.8 --no-build-isolation
+pip install opencv-python==4.5.5.64
+apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 ```
 
 **[Offline Mode]** Install VideoLLaMA2 as a Python package (better for direct use):
@@ -82,6 +84,8 @@ cd VideoLLaMA2
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
 pip install flash-attn==2.5.8 --no-build-isolation
+pip install opencv-python==4.5.5.64
+apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 ```
 
 ## 🚀 Main Results
@@ -94,7 +98,6 @@ pip install flash-attn==2.5.8 --no-build-isolation
 
 ### Audio QA 
 <p><img src="https://github.com/user-attachments/assets/46e55952-5a54-4564-bcd4-cfa4edd7f36a" width="800" "/></p>
->>>>>>> origin/audio_visual
 
 ### Audio-Visual QA 
 <p><img src="https://github.com/user-attachments/assets/8114c1e3-7f93-401b-9ea6-9ce7c96d7b05" width="800" "/></p>
@@ -123,39 +126,16 @@ pip install flash-attn==2.5.8 --no-build-isolation
 
 ## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
 
-It is highly recommended to try our [online demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2) first.
+It is highly recommended to try our [online demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2-AV) first.
 
 To run a video-based LLM (Large Language Model) web demonstration on your device, you will first need to ensure that you have the necessary model checkpoints prepared, followed by adhering to the steps outlined to successfully launch the demo.
 
 ### Single-model Version
 
-* Launch a gradio app directly ([VideoLLaMA2-7B](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B) is adopted by default):
+* Launch a gradio app directly ([VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B) is adopted by default):
 ```bash
-python videollama2/serve/gradio_web_server_adhoc.py
+python videollama2/serve/gradio_web_server_adhoc_av.py
 ```
-
-### Multiple-model Version
-
-1. Launch a global controller
-```bash
-cd /path/to/VideoLLaMA2
-python -m videollama2.serve.controller --host 0.0.0.0 --port 10000
-```
-
-2. Launch a gradio webserver
-```bash
-python -m videollama2.serve.gradio_web_server --controller http://localhost:10000 --model-list-mode reload
-```
-
-3. Launch one or multiple model workers
-```bash
-#  export HF_ENDPOINT=https://hf-mirror.com  # If you are unable to access Hugging Face, try to uncomment this line.
-python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40000 --worker http://localhost:40000 --model-path /PATH/TO/MODEL1
-python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40001 --worker http://localhost:40001 --model-path /PATH/TO/MODEL2
-python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://localhost:10000 --port 40002 --worker http://localhost:40002 --model-path /PATH/TO/MODEL3
-...
-```
-
 
 ## 🗝️ Training & Evaluation
 
@@ -164,87 +144,69 @@ python -m videollama2.serve.model_worker --host 0.0.0.0 --controller http://loca
 To facilitate further development on top of our codebase, we provide a quick-start guide on how to train a customized [VideoLLaMA2](https://github.com/DAMO-NLP-SG/VideoLLaMA2) with [VideoLLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) dataset and evaluate the trained model on the mainstream video-llm benchmarks.
 
 1. Training Data Structure:
-```bash
-VideoLLaMA2
-├── datasets
-│   ├── videollava_pt
-|   |   ├── llava_image/ # Available at: https://pan.baidu.com/s/17GYcE69FcJjjUM0e4Gad2w?pwd=9ga3 or https://drive.google.com/drive/folders/1QmFj2FcMAoWNCUyiUtdcW0-IOhLbOBcf?usp=drive_link
-|   |   ├── valley/      # Available at: https://pan.baidu.com/s/1jluOimE7mmihEBfnpwwCew?pwd=jyjz or https://drive.google.com/drive/folders/1QmFj2FcMAoWNCUyiUtdcW0-IOhLbOBcf?usp=drive_link
-|   |   └── valley_llavaimage.json # Available at: https://drive.google.com/file/d/1zGRyVSUMoczGq6cjQFmT0prH67bu2wXD/view, including 703K video-text and 558K image-text pairs
-│   ├── videollava_sft
-|   |   ├── llava_image_tune/  # Available at: https://pan.baidu.com/s/1l-jT6t_DlN5DTklwArsqGw?pwd=o6ko
-|   |   ├── videochatgpt_tune/ # Available at: https://pan.baidu.com/s/10hJ_U7wVmYTUo75YHc_n8g?pwd=g1hf
-|   |   └── videochatgpt_llavaimage_tune.json # Available at: https://drive.google.com/file/d/1zGRyVSUMoczGq6cjQFmT0prH67bu2wXD/view, including 100K video-centric, 625K image-centric and 40K text-only conversations
-```
+Follow the main branch(https://github.com/DAMO-NLP-SG/VideoLLaMA2/tree/main) of this VideoLLaMA2 codebase.
 2. Command:
 ```bash
-# VideoLLaMA2-vllava pretraining
-bash scripts/vllava/pretrain.sh
-# VideoLLaMA2-vllava finetuning
-bash scripts/vllava/finetune.sh
+# VideoLLaMA2.1-audio pretraining
+bash scripts/custom/pretrain_audio.sh
+# VideoLLaMA2.1-audio finetuning
+bash scripts/custom/finetune_audio.sh
+# VideoLLaMA2.1-audio_visual finetuning
+bash scripts/custom/va_joint.sh
 ```
 3. Evaluation Data Structure:
-```bash
-VideoLLaMA2
-├── eval
-│   ├── egoschema # Official website: https://github.com/egoschema/EgoSchema
-|   |   ├── good_clips_git/ # Available at: https://drive.google.com/drive/folders/1SS0VVz8rML1e5gWq7D7VtP1oxE2UtmhQ
-|   |   └── questions.json  # Available at: https://github.com/egoschema/EgoSchema/blob/main/questions.json
-│   ├── mvbench # Official website: https://huggingface.co/datasets/OpenGVLab/MVBench
-|   |   ├── video/
-|   |   |   ├── clever/
-|   |   |   └── ...
-|   |   └── json/
-|   |   |   ├── action_antonym.json
-|   |   |   └── ...
-│   ├── perception_test_mcqa # Official website: https://huggingface.co/datasets/OpenGVLab/MVBench
-|   |   ├── videos/ # Available at: https://storage.googleapis.com/dm-perception-test/zip_data/test_videos.zip
-|   |   └── mc_question_test.json # Download from https://storage.googleapis.com/dm-perception-test/zip_data/mc_question_test_annotations.zip
-│   ├── videomme # Official website: https://video-mme.github.io/home_page.html#leaderboard
-|   |   ├── test-00000-of-00001.parquet
-|   |   ├── videos/
-|   |   └── subtitles/
-│   ├── Activitynet_Zero_Shot_QA # Official website: https://github.com/MILVLG/activitynet-qa
-|   |   ├── all_test/   # Available at: https://mbzuaiac-my.sharepoint.com/:u:/g/personal/hanoona_bangalath_mbzuai_ac_ae/EatOpE7j68tLm2XAd0u6b8ABGGdVAwLMN6rqlDGM_DwhVA?e=90WIuW
-|   |   ├── test_q.json # Available at: https://github.com/MILVLG/activitynet-qa/tree/master/dataset
-|   |   └── test_a.json # Available at: https://github.com/MILVLG/activitynet-qa/tree/master/dataset
-│   ├── MSVD_Zero_Shot_QA # Official website: https://github.com/xudejing/video-question-answering
-|   |   ├── videos/     
-|   |   ├── test_q.json 
-|   |   └── test_a.json
-│   ├── videochatgpt_gen # Official website: https://github.com/mbzuai-oryx/Video-ChatGPT/tree/main/quantitative_evaluation
-|   |   ├── Test_Videos/ # Available at: https://mbzuaiac-my.sharepoint.com/:u:/g/personal/hanoona_bangalath_mbzuai_ac_ae/EatOpE7j68tLm2XAd0u6b8ABGGdVAwLMN6rqlDGM_DwhVA?e=90WIuW
-|   |   ├── Test_Human_Annotated_Captions/ # Available at: https://mbzuaiac-my.sharepoint.com/personal/hanoona_bangalath_mbzuai_ac_ae/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking%2FTest%5FHuman%5FAnnotated%5FCaptions%2Ezip&parent=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking&ga=1
-|   |   ├── generic_qa.json     # These three json files available at: https://mbzuaiac-my.sharepoint.com/personal/hanoona_bangalath_mbzuai_ac_ae/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fhanoona%5Fbangalath%5Fmbzuai%5Fac%5Fae%2FDocuments%2FVideo%2DChatGPT%2FData%5FCode%5FModel%5FRelease%2FQuantitative%5FEvaluation%2Fbenchamarking%2FBenchmarking%5FQA&ga=1
-|   |   ├── temporal_qa.json
-|   |   └── consistency_qa.json
-```
+Follow the main branch(https://github.com/DAMO-NLP-SG/VideoLLaMA2/tree/main) of this VideoLLaMA2 codebase.
+
 4. Command:
 ```bash
-# mvbench evaluation
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_video_qa_mvbench.sh
-# activitynet-qa evaluation (need to set azure openai key/endpoint/deployname)
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_video_qa_mvbench.sh
+# ClothoAQA.sh evaluation
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_clothoAQA.sh
+# TUT2017 evaluation
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_TUT2017.sh
+# VocalSound evaluation
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_vocalsound.sh
+# AVQA_music evaluation
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_video_AVQA.sh
+# AVSD evaluation (need to set azure openai key/endpoint/deployname)
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_video_AVSD.sh
+# AVSSD evaluation (need to set azure openai key/endpoint/deployname)
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 bash scripts/eval/eval_audio_video_AVSSD.sh
 ```
 
 ### Data Format
 
-If you want to train a video-llm on your data, you need to follow the procedures below to prepare the video/image sft data:
+If you want to train a video-llm on your data, you need to follow the procedures below to prepare the audio/video/image sft data:
 
 1. Suppose your data structure is like:
 ```bash
 VideoLLaMA2
 ├── datasets
 │   ├── custom_sft
-│   |   ├── images
-│   |   ├── videos
+│   |   ├── audio
+│   |   ├── video
+│   |   ├── image
 |   |   └── custom.json
 ```
-2. Then you should re-organize the annotated video/image sft data according to the following format:
+2. Then you should re-organize the annotated audio/video/image sft data according to the following format:
 ```json
 [
     {
         "id": 0,
+        "audio": "audio/xxx.wav",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "<audio>\nPlease describe the sound event within the audio."
+            },
+            {
+                "from": "gpt",
+                "value": "Loud television static dips in and out of focus."
+            },
+            ...
+        ],
+    }
+    {
+        "id": 1,
         "video": "images/xxx.jpg",
         "conversations": [
             {
@@ -259,7 +221,7 @@ VideoLLaMA2
         ],
     }
     {
-        "id": 1,
+        "id": 2,
         "video": "videos/xxx.mp4",
         "conversations": [
             {
@@ -276,52 +238,93 @@ VideoLLaMA2
     ...
 ]
 ```
-3. Modify the `scripts/custom/finetune.sh`:
+3. Modify the `scripts/custom/finetune_audio.sh`:
 ```bash
 ...
 --data_path datasets/custom_sft/custom.json
 --data_folder datasets/custom_sft/
---pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base)
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
+...
+4. Modify the `scripts/custom/va_joint.sh`:
+```bash
+...
+--data_path datasets/custom_sft/custom.json
+--data_folder datasets/custom_sft/
+--pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
 ...
 ```
 
 ## 🤖 Inference
 
-Video/Image Inference:
+Audio/Video-Audio Inference:
 ```python
 import sys
 sys.path.append('./')
 from videollama2 import model_init, mm_infer
 from videollama2.utils import disable_torch_init
+import argparse
 
+def inference(args):
 
-def inference():
-    disable_torch_init()
+    model_path = args.model_path
+    model, processor, tokenizer = model_init(model_path)
+
+    if args.modal_type == "a":
+        model.model.vision_tower = None
+    elif args.modal_type == "v":
+        model.model.audio_tower = None
+    elif args.modal_type == "av":
+        pass
+    else:
+        raise NotImplementedError
+    # Audio-visual Inference
+    audio_video_path = "assets/00003491.mp4"
+    preprocess = processor['audio' if args.modal_type == "a" else "video"]
+    if args.modal_type == "a":
+        audio_video_tensor = preprocess(audio_video_path)
+    else:
+        audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
+    question = f"Please describe the video with audio information."
+
+    # Audio Inference
+    audio_video_path = "assets/bird-twitter-car.wav"
+    preprocess = processor['audio' if args.modal_type == "a" else "video"]
+    if args.modal_type == "a":
+        audio_video_tensor = preprocess(audio_video_path)
+    else:
+        audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
+    question = f"Please describe the audio."
 
     # Video Inference
-    modal = 'video'
-    modal_path = 'assets/cat_and_chicken.mp4' 
-    instruct = 'What animals are in the video, what are they doing, and how does the video feel?'
-    # Reply:
-    # The video features a kitten and a baby chick playing together. The kitten is seen laying on the floor while the baby chick hops around. The two animals interact playfully with each other, and the video has a cute and heartwarming feel to it.
+    audio_video_path = "assets/output_v_1jgsRbGzCls.mp4"
+    preprocess = processor['audio' if args.modal_type == "a" else "video"]
+    if args.modal_type == "a":
+        audio_video_tensor = preprocess(audio_video_path)
+    else:
+        audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
+    question = f"What activity are the people practicing in the video?"
 
-    # Image Inference
-    modal = 'image'
-    modal_path = 'assets/sora.png'
-    instruct = 'What is the woman wearing, what is she doing, and how does the image feel?'
-    # Reply:
-    # The woman in the image is wearing a black coat and sunglasses, and she is walking down a rain-soaked city street. The image feels vibrant and lively, with the bright city lights reflecting off the wet pavement, creating a visually appealing atmosphere. The woman's presence adds a sense of style and confidence to the scene, as she navigates the bustling urban environment.
-
-    model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F'
-    # Base model inference (only need to replace model_path)
-    # model_path = 'DAMO-NLP-SG/VideoLLaMA2.1-7B-16F-Base'
-    model, processor, tokenizer = model_init(model_path)
-    output = mm_infer(processor[modal](modal_path), instruct, model=model, tokenizer=tokenizer, do_sample=False, modal=modal)
+    output = mm_infer(
+        audio_video_tensor,
+        question,
+        model=model,
+        tokenizer=tokenizer,
+        modal='audio' if args.modal_type == "a" else "video",
+        do_sample=False,
+    )
 
     print(output)
 
+
 if __name__ == "__main__":
-    inference()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--model-path', help='', required=True)
+    parser.add_argument('--modal-type', choices=["a", "v", "av"], help='', required=True)
+    args = parser.parse_args()
+
+    inference(args)
+
 ```
 
 ## 📑 Citation
