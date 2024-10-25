@@ -245,6 +245,7 @@ VideoLLaMA2
 --data_folder datasets/custom_sft/
 --pretrain_mm_mlp_adapter CONNECTOR_DOWNLOAD_PATH (e.g., DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)
 ...
+```
 4. Modify the `scripts/custom/va_joint.sh`:
 ```bash
 ...
