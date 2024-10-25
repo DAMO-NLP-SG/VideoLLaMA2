@@ -71,6 +71,7 @@ Basic Dependencies:
 ```bash
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
+git checkout audio_visual
 pip install -r requirements.txt
 pip install flash-attn==2.5.8 --no-build-isolation
 pip install opencv-python==4.5.5.64
@@ -81,6 +82,7 @@ apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 ```bash
 git clone https://github.com/DAMO-NLP-SG/VideoLLaMA2
 cd VideoLLaMA2
+git checkout audio_visual
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
 pip install flash-attn==2.5.8 --no-build-isolation
@@ -124,7 +126,7 @@ apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 | [VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-AV)  | Chat | [Fine-tuned BEATs_iter3+(AS2M)(cpt2)](https://1drv.ms/u/s!AqeByhGUtINrgcpj8ujXH1YUtxooEg?e=E9Ncea) | [VideoLLaMA2.1-7B-16F](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-16F)  |
 
 
-## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2)
+## [🤗 Demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2-AV)
 
 It is highly recommended to try our [online demo](https://huggingface.co/spaces/lixin4ever/VideoLLaMA2-AV) first.
 
@@ -132,7 +134,7 @@ To run a video-based LLM (Large Language Model) web demonstration on your device
 
 ### Single-model Version
 
-* Launch a gradio app directly ([VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2-7B) is adopted by default):
+* Launch a gradio app directly ([VideoLLaMA2.1-7B-AV](https://huggingface.co/DAMO-NLP-SG/VideoLLaMA2.1-7B-AV) is adopted by default):
 ```bash
 python videollama2/serve/gradio_web_server_adhoc_av.py
 ```
