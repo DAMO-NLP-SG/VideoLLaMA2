@@ -281,13 +281,13 @@ def inference(args):
     else:
         raise NotImplementedError
     # Audio-visual Inference
-    audio_video_path = "assets/00003491.mp4"
+    audio_video_path = "assets/00000368.mp4"
     preprocess = processor['audio' if args.modal_type == "a" else "video"]
     if args.modal_type == "a":
         audio_video_tensor = preprocess(audio_video_path)
     else:
         audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
-    question = f"Please describe the video with audio information."
+    question = f"Please describe the video with audio information:"
 
     # Audio Inference
     audio_video_path = "assets/bird-twitter-car.wav"
@@ -296,7 +296,7 @@ def inference(args):
         audio_video_tensor = preprocess(audio_video_path)
     else:
         audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
-    question = f"Please describe the audio."
+    question = f"Please describe the audio:"
 
     # Video Inference
     audio_video_path = "assets/output_v_1jgsRbGzCls.mp4"
