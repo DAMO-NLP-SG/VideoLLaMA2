@@ -287,7 +287,7 @@ def inference(args):
         audio_video_tensor = preprocess(audio_video_path)
     else:
         audio_video_tensor = preprocess(audio_video_path, va=True if args.modal_type == "av" else False)
-    question = f"Please describe the video with audio information:"
+    question = f"Who plays the instrument louder?"
 
     # Audio Inference
     audio_video_path = "assets/bird-twitter-car.wav"

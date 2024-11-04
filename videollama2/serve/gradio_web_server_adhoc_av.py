@@ -7,7 +7,7 @@ import torch
 import gradio as gr
 
 import sys
-sys.path.append('./videollama2')
+sys.path.append('./')
 from videollama2 import model_init, mm_infer
 from videollama2.utils import disable_torch_init
 
@@ -95,7 +95,7 @@ class Chat:
 
 
 @spaces.GPU(duration=120)
-def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, top_p, max_output_tokens, dtype=torch.float16):
+def generate(video, av, audio, message, chatbot, va_tag, textbox_in, temperature, top_p, max_output_tokens, dtype=torch.float16):
     data = []
     image = None
 
@@ -105,6 +105,14 @@ def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, to
             data.append((processor['image'](image).to(handler.model.device, dtype=dtype), '<image>'))
         elif video is not None:
             video_audio = processor['video'](video, va=va_tag=="Audio Vision")
+            if va_tag=="Audio Vision":
+                for k,v in video_audio.items():
+                    video_audio[k] = v.to(handler.model.device, dtype=dtype)
+            else:
+                video_audio = video_audio.to(handler.model.device, dtype=dtype)
+            data.append((video_audio, '<video>'))
+        elif av is not None:
+            video_audio = processor['video'](av, va=va_tag=="Audio Vision")
             if va_tag=="Audio Vision":
                 for k,v in video_audio.items():
                     video_audio[k] = v.to(handler.model.device, dtype=dtype)
@@ -126,7 +134,7 @@ def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, to
     show_images = ""
     if image is not None:
         show_images += f'<img src="./file={image}" style="display: inline-block;width: 250px;max-height: 400px;">'
-    if video is not None:
+    if video is not None or av is not None:
         show_images += f'<video controls playsinline width="500" style="display: inline-block;"  src="./file={video}"></video>'
     if audio is not None:
         show_images += f'<audio controls style="display: inline-block;" src="./file={audio}"></audio>'
@@ -140,6 +148,7 @@ def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, to
     else:
         previous_image = re.findall(r'<img src="./file=(.+?)"', chatbot[0][0])
         previous_video = re.findall(r'<video controls playsinline width="500" style="display: inline-block;"  src="./file=(.+?)"', chatbot[0][0])
+        previous_av = re.findall(r'<video controls playsinline width="500" style="display: inline-block;"  src="./file=(.+?)"', chatbot[0][0])
         previous_audio = re.findall(r'<audio controls style="display: inline-block;" src="./file=(.+?)"', chatbot[0][0])
         if len(previous_image) > 0:
             previous_image = previous_image[0]
@@ -151,6 +160,12 @@ def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, to
             previous_video = previous_video[0]
             # 2.2 new video append or pure text input will start a new conversation
             if video is not None and os.path.basename(previous_video) != os.path.basename(video):
+                message.clear()
+                one_turn_chat[0] += "\n" + show_images
+        elif len(previous_av) > 0:
+            previous_av = previous_av[0]
+            # 2.2 new video append or pure text input will start a new conversation
+            if av is not None and os.path.basename(previous_av) != os.path.basename(av):
                 message.clear()
                 one_turn_chat[0] += "\n" + show_images
         elif len(previous_audio) > 0:
@@ -181,7 +196,7 @@ def generate(video, audio, message, chatbot, va_tag, textbox_in, temperature, to
     one_turn_chat[1] = text_en_out
     chatbot.append(one_turn_chat)
 
-    return gr.update(value=video, interactive=True), gr.update(value=audio, interactive=True), message, chatbot
+    return gr.update(value=video, interactive=True), gr.update(value=av, interactive=True), gr.update(value=audio, interactive=True), message, chatbot
 
 
 def regenerate(message, chatbot):
@@ -226,6 +241,7 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
     with gr.Row():
         with gr.Column(scale=3):
             video = gr.Video(label="Input Video")
+            av = gr.Video(label="Input Video_Audio")
             audio = gr.Audio(label="Input Audio", type="filepath")
 
             with gr.Accordion("Parameters", open=True) as parameter_row:
@@ -280,7 +296,7 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
                 # flag_btn     = gr.Button(value="⚠️  Flag", interactive=True)
                 # stop_btn     = gr.Button(value="⏹️  Stop Generation", interactive=False)
                 regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=True)
-                clear_btn      = gr.Button(value="��️  Clear history", interactive=True)
+                clear_btn      = gr.Button(value="🗑️  Clear history", interactive=True)
 
     with gr.Row():
         cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -303,14 +319,14 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
                 examples=[
                     [
                         f"{cur_dir}/examples/00000368.mp4",
-                        "Please describe the video with audio information.",
+                        "Who plays the instrument louder?",
                     ],
                     [
                         f"{cur_dir}/examples/00003491.mp4",
                         "Where is the loudest instrument?",
                     ],
                 ],
-                inputs=[video, textbox],
+                inputs=[av, textbox],
             )
         with gr.Column():
             # audio
@@ -318,11 +334,11 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
                 examples=[
                     [
                         f"{cur_dir}/examples/bird-twitter-car.wav",
-                        "Please describe the audio.",
+                        "Please describe the audio:",
                     ],
                     [
                         f"{cur_dir}/examples/door.of.bar.raining2.wav",
-                        "Please describe the audio.",
+                        "Please describe the audio:",
                     ],
                 ],
                 inputs=[audio, textbox],
@@ -333,20 +349,21 @@ with gr.Blocks(title='VideoLLaMA 2 🔥🚀🔥', theme=theme, css=block_css) as
 
     submit_btn.click(
         generate, 
-        [video, audio, message, chatbot, va_tag, textbox, temperature, top_p, max_output_tokens],
-        [video, audio, message, chatbot])
+        [video, av, audio, message, chatbot, va_tag, textbox, temperature, top_p, max_output_tokens],
+        [video, av, audio, message, chatbot])
 
     regenerate_btn.click(
         regenerate, 
         [message, chatbot], 
         [message, chatbot]).then(
         generate, 
-        [video, audio, message, chatbot, va_tag, textbox, temperature, top_p, max_output_tokens], 
-        [video, audio, message, chatbot])
+        [video, av, audio, message, chatbot, va_tag, textbox, temperature, top_p, max_output_tokens], 
+        [video, av, audio, message, chatbot])
 
     clear_btn.click(
         clear_history, 
         [message, chatbot],
-        [video, audio, message, chatbot, textbox])
+        [video, av, audio, message, chatbot, textbox])
 
 demo.launch(share=False)
+
