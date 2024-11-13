@@ -102,7 +102,9 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         elif 'mistral' in model_base.lower():
             model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=config, **kwargs)
         else:
-            model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=config, **kwargs)
+            #model = Videollama2MistralForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=config, **kwargs)
+            # Using the visual@MistralForCasualLM will cause the model to give random output when using finetuned qwen2 based varient 
+            model = Videollama2Qwen2ForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=config, **kwargs)
 
         token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
         if model.lm_head.weight.shape[0] != token_num:
