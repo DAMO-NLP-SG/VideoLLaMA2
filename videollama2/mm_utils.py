@@ -11,7 +11,6 @@ import imageio
 import numpy as np
 from PIL import Image
 from decord import VideoReader, cpu
-from moviepy.editor import VideoFileClip
 from transformers import StoppingCriteria
 
 from .constants import NUM_FRAMES, MAX_FRAMES, NUM_FRAMES_PER_SECOND, MODAL_INDEX_MAP, DEFAULT_IMAGE_TOKEN
@@ -237,21 +236,10 @@ def process_video_old(video_path, processor, aspect_ratio='pad', num_frames=NUM_
             if len(frame_id_list) > MAX_FRAMES:
                 frame_id_list = np.linspace(0, duration-1, MAX_FRAMES, dtype=int)
             video_data = [frame for index, frame in enumerate(video_gif) if index in frame_id_list]
-        # added by lixin4ever, include the support of .webm files from sthsthv2
-        elif video_path.endswith('.webm'):
-            video_webm = VideoFileClip(video_path)
-            video_frames = np.array(list(video_webm.iter_frames()))
-
-            duration, local_fps = len(video_frames), video_webm.fps
-
-            frame_id_list = frame_sample(duration, mode=sample_scheme, local_fps=local_fps)
-            # limit the max input frames
-            if len(frame_id_list) > MAX_FRAMES:
-                frame_id_list = np.linspace(0, duration-1, MAX_FRAMES, dtype=int)
-            video_data = video_frames[frame_id_list]
         else:
             # NOTE: num_threads=1 is required to avoid deadlock in multiprocessing
-            decord_vr = VideoReader(uri=video_path, ctx=cpu(0), num_threads=1) 
+            # decord_vr = VideoReader(uri=video_path, ctx=cpu(0), num_threads=1)
+            decord_vr = VideoReader(video_path, ctx=cpu(0), num_threads=2) 
             duration, local_fps = len(decord_vr), float(decord_vr.get_avg_fps())
         
             frame_id_list = frame_sample(duration, mode=sample_scheme, local_fps=local_fps)
