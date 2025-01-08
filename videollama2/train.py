@@ -530,6 +530,8 @@ def train(attn_implementation=None):
 
         model.config.mm_projector_lr = training_args.mm_projector_lr
         model.config.num_frames = NUM_FRAMES if data_args.num_frames is None else data_args.num_frames
+        # vision_tower is not trainable in VideoLLaMA2
+        model.get_model().vision_tower.requires_grad_(False)
 
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer

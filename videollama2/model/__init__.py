@@ -182,9 +182,6 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
     if "videollama" in model_type:
         vision_tower = model.get_vision_tower()
-        if not vision_tower.is_loaded:
-            vision_tower.load_model()
-        vision_tower.to(device=device, dtype=torch.float16)
         # NOTE: videollama2 adopts the same processor for processing image and video.
         processor = vision_tower.image_processor
 

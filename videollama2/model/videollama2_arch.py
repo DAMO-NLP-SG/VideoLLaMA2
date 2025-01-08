@@ -31,7 +31,7 @@ class Videollama2MetaModel:
         super(Videollama2MetaModel, self).__init__(config)
 
         if hasattr(config, "mm_vision_tower"):
-            self.vision_tower = build_vision_tower(config, delay_load=True)
+            self.vision_tower = build_vision_tower(config)
             self.mm_projector = build_vision_projector(config)
 
     def get_vision_tower(self):
@@ -49,7 +49,7 @@ class Videollama2MetaModel:
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:
-            vision_tower = build_vision_tower(model_args)
+            vision_tower = build_vision_tower(model_args, load_pretrained=True)
 
             if fsdp is not None and len(fsdp) > 0:
                 self.vision_tower = [vision_tower]
@@ -60,7 +60,6 @@ class Videollama2MetaModel:
                 vision_tower = self.vision_tower[0]
             else:
                 vision_tower = self.vision_tower
-            vision_tower.load_model()
 
         self.config.use_mm_proj = True
         self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
