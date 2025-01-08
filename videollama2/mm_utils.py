@@ -151,7 +151,7 @@ def process_video(video_path, processor, s=None, e=None, aspect_ratio='pad', num
             fps = 25
             num_frames_of_video = len(gif_reader)
         else:
-            vreader = VideoReader(video_path, ctx=cpu(0), num_threads=1)
+            vreader = VideoReader(video_path, num_threads=2)
 
             fps = vreader.get_avg_fps()
             num_frames_of_video = len(vreader)
