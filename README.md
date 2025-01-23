@@ -30,12 +30,16 @@ VideoLLaMA 2: Advancing Spatial-Temporal Modeling and Audio Understanding in Vid
 <details open><summary>💡 Some other multimodal-LLM projects from our team may interest you ✨. </summary><p>
 <!--  may -->
 
+> [**VideoLLaMA 3: Frontier Multimodal Foundation Models for Image and Video Understanding**](https://github.com/DAMO-NLP-SG/VideoLLaMA3) <br>
+> Boqiang Zhang<sup>* </sup>, Kehan Li<sup>* </sup>, Zesen Cheng<sup>* </sup>, Zhiqiang Hu<sup>* </sup>, Yuqian Yuan<sup>* </sup>, Guanzheng Chen<sup>* </sup>, Sicong Leng<sup>* </sup>, Yuming Jiang<sup>* </sup>, Hang Zhang<sup>* </sup>, Xin Li<sup>* </sup>, Peng Jin, Wenqi Zhang, Fan Wang, Lidong Bing, Deli Zhao <br>
+[![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/VideoLLaMA3)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/VideoLLaMA3.svg?style=social)](https://github.com/DAMO-NLP-SG/VideoLLaMA3) [![arXiv](https://img.shields.io/badge/Arxiv-2501.13106-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2501.13106) <br>
+
 > [**Video-LLaMA: An Instruction-tuned Audio-Visual Language Model for Video Understanding**](https://github.com/DAMO-NLP-SG/Video-LLaMA) <br>
 > Hang Zhang, Xin Li, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/Video-LLaMA)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/Video-LLaMA.svg?style=social)](https://github.com/DAMO-NLP-SG/Video-LLaMA) [![arXiv](https://img.shields.io/badge/Arxiv-2306.02858-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2306.02858) <br>
 
 > [**VCD: Mitigating Object Hallucinations in Large Vision-Language Models through Visual Contrastive Decoding**](https://arxiv.org/abs/2311.16922) <br>
-> Sicong Leng*, Hang Zhang*, Guanzheng Chen, Xin Li, Shijian Lu, Chunyan Miao, Lidong Bing <br>
+> Sicong Leng<sup>* </sup>, Hang Zhang<sup>* </sup>, Guanzheng Chen, Xin Li, Shijian Lu, Chunyan Miao, Lidong Bing <br>
 [![github](https://img.shields.io/badge/-Github-black?logo=github)](https://github.com/DAMO-NLP-SG/VCD)  [![github](https://img.shields.io/github/stars/DAMO-NLP-SG/VCD.svg?style=social)](https://github.com/DAMO-NLP-SG/VCD)  [![arXiv](https://img.shields.io/badge/Arxiv-2311.16922-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2311.16922) <br>
 
 > [**The Curse of Multi-Modalities: Evaluating Hallucinations of Large Multimodal Models across Language, Visual, and Audio**](https://arxiv.org/abs/2410.12787) <br>
